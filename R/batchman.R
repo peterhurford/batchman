@@ -8,7 +8,7 @@
 #' @export
 batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE) {
   if (length(inputs) <= size) return(batch_fn(inputs, ...))
-  slices <- slice(inputs, size)
+  slices <- split(inputs, as.integer((seq_along(inputs) - 1) / size))
   batches <- lapply(seq_along(slices), function(i) {
     if (verbose) cat(".")
     tryCatch(
