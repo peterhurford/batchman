@@ -9,7 +9,7 @@
 batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE) {
   if (length(inputs) <= size) return(batch_fn(inputs, ...))
   slices <- slice(inputs, size)
-  batch <- lapply(seq_along(slices), function(i) {
+  batches <- lapply(seq_along(slices), function(i) {
     if (verbose) cat(".")
     tryCatch(
       batch_fn(slices[[i]], ...),
@@ -19,5 +19,5 @@ batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE) {
       }
     )
   })
-  do.call(plyr::rbind.fill, Filter(Negate(is.null), batch))
+  combine(batches)
 }
