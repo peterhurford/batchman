@@ -8,13 +8,17 @@
 #' @name batchman
 #' @export
 batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE) {
+  if (length(inputs) <= size) return(batch_fn(inputs, ...))
   slices <- slice(inputs, size)
-  dfs <- lapply(seq_along(slices), function(i) {
+  batch <- lapply(seq_along(slices), function(i) {
     if (verbose) cat(".")
-    tryCatch(packetized_method(slices[[i]], ...),
-                   error = function(e)
-                           { warning("Some of the data failed to process because: ", e$message); NULL })
-    # TODO: (RK) Any sneaky way to fit intermediate caching in here?
+    tryCatch(
+      batch_fn(slices[[i]], ...),
+      error = function(e) {
+        warning("Some of the data failed to process because: ", e$message)
+        NULL
+      }
+    )
   })
-  do.call(plyr::rbind.fill, Filter(Negate(is.null), dfs))
-}})}       '
+  do.call(plyr::rbind.fill, Filter(Negate(is.null), batch))
+}
