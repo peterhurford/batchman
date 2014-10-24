@@ -5,7 +5,6 @@
 #' @param ... additional arguments to pass to \code{batch_fn}.
 #' @param size numeric. The size of the packets. Default 50.
 #' @param verbose logical. Whether or not to announce progress by printing dots.
-#' @name batchman
 #' @export
 batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE) {
   if (length(inputs) <= size) return(batch_fn(inputs, ...))
