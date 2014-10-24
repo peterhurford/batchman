@@ -2,20 +2,20 @@
 % Please edit documentation in R/combine.R
 \name{combine}
 \alias{combine}
-\title{Recombine a batch onto the original, for all classes.}
+\alias{combine_by_list}
+\title{Combine multiple objects into one object, regardless of class.}
 \usage{
-combine(original, batch)
+combine(...)
+
+combine_by_list(combination_list)
 }
 \arguments{
-\item{original.}{The object to get merged upon by the batch.}
-
-\item{batch.}{The batch to merge onto the original. Must be the same class as
-original.}
+\item{...}{A list of batches to combine.}
 }
 \value{
 an object of the same class as original, but now including batch.
 }
 \description{
-Recombine a batch onto the original, for all classes.
+Combine multiple objects into one object, regardless of class.
 }
 
