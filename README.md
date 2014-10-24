@@ -1,3 +1,5 @@
+![Batchman](http://i.imgur.com/63jNVwY.png)
+
 ## Batchman
 
 **Batchman** is a set of R methods to assist with batch processing, with the ability to run methods in batches and combine batches back together.
