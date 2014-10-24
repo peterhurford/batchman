@@ -9,7 +9,7 @@ combine <- function(...) {
 #' @inheritParams combine
 #' @rdname combine
 combine_by_list <- function(combination_list) {
-  if (!identical(class(combinaiton_list), 'list'))
+  if (!identical(class(combination_list), 'list'))
     stop('Input must be a list. Call combine() instead.')
 
   if (length(combination_list) <= 1) return(combination_list)
@@ -17,10 +17,10 @@ combine_by_list <- function(combination_list) {
   if(length(unique(sapply(combination_list, class))) != 1)
     stop('All input elements must be the same class.')
 
-  first <- combination_list[[0]]
+  first <- combination_list[[1]]
   fn <- if (identical(class(first), 'character') & length(first) == 1) paste0  # String
   else if (class(first) %in% c('character', 'numeric', 'list', 'logical')) c   # Vector, List
-  else if (identical(class(first), 'data.frame')) playr::rbind.fill            # Data frame
+  else if (identical(class(first), 'data.frame')) plyr::rbind.fill             # Data frame
   else if (identical(class(first), 'matrix')) merge                            # Matrix
   else stop('Class for combine not recognized.')
   do.call(fn, combination_list)
