@@ -1,23 +1,27 @@
-#' Recombine a batch onto the original, for all classes.
-#' @param original. The object to get merged upon by the batch.
-#' @param batch. The batch to merge onto the original. Must be the same class as
-#' original.
+#' Combine multiple objects into one object, regardless of class.
+#' @param ... A list of batches to combine.
 #' @return an object of the same class as original, but now including batch.
 #' @export
-combine <- function(original, batch) {
-  if (is.null(original)) { return(batch) }
+combine <- function(...) {
+  combine_by_list(list(...))
+}
 
-  if (!identical(class(original), class(batch)))
-    stop('Combine requires matching classes.')
+#' @inheritParams combine
+#' @rdname combine
+combine_by_list <- function(combination_list) {
+  if (!identical(class(combinaiton_list)), 'list')
+    stop('Input must be a list. Call combine() instead.')
 
-  if (identical(class(original), 'character') & length(original) == 1)
-    paste0(original, batch)                              # String
-  else if (class(original) %in% c('character', 'numeric', 'list'))
-    c(original, batch)                                   # Vector, List
-  else if (identical(class(original), 'data.frame'))
-    plyr::rbind.fill(original, batch)                    # Data frame
-  else if (identical(class(original), 'matrix'))
-    merge(original, batch, by = 'row.names', all = TRUE) # Matrix
-  else
-    stop('Class for combine not recognized.')
+  if (length(combination_list) <= 1) return(combination_list)
+
+  if(length(unique(sapply(combination_list, class))) != 1)
+    stop('All input elements must be the same class.')
+
+  first <- combination_list[[0]]
+  fn <- if (identical(class(first), 'character') & length(first) == 1) paste0  # String
+  else if (class(first) %in% c('character', 'numeric', 'list', 'logical')) c   # Vector, List
+  else if (identical(class(first), 'data.frame')) playr::rbind.fill            # Data frame
+  else if (identical(class(first), 'matrix')) merge                            # Matrix
+  else stop('Class for combine not recognized.')
+  do.call(fn, combination_list)
 }

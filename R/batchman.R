@@ -19,5 +19,5 @@ batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE) {
       }
     )
   })
-  combine(batches)
+  combine_by_list(batches)
 }
