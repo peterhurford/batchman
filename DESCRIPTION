@@ -1,8 +1,8 @@
 Package: batchman
-Title: A wrapper for R methods to run them in arbitrary batches.
+Title: Batchman is a set of R methods to assist with batch processing.
 Version: 0.1
 Authors@R: "Peter Hurford <peter@peterhurford.com> [aut, cre]"
-Description: See title.
+Description: **Batchman** is a set of R methods to assist with batch processing, with the ability to run methods in batches and combine batches back together.
 Depends:
     R (>= 3.1.1)
 Suggests:
