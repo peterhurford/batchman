@@ -6,7 +6,7 @@
 \alias{batchman-package}
 \title{batchman.}
 \usage{
-batchman(batch_fn, inputs, ..., size = 50, verbose = TRUE)
+batchman(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
@@ -16,6 +16,8 @@ batchman(batch_fn, inputs, ..., size = 50, verbose = TRUE)
 \item{size}{numeric. The size of the packets. Default 50.}
 
 \item{verbose}{logical. Whether or not to announce progress by printing dots.}
+
+\item{stop}{logical. Whether to stop if an error is raised.}
 
 \item{inputs.}{The inputs to split into batches.}
 }
