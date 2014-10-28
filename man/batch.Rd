@@ -5,7 +5,7 @@
 \title{batch maps a function to a batched version of that function.}
 \usage{
 batch(batch_fn, inputs, ..., splitting_strategy = NULL, combination_strategy,
-  size = 50, verbose = TRUE, stop = FALSE)
+  size = 50, verbose = TRUE, stop = TRUE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
