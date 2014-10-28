@@ -1,4 +1,4 @@
-#' Wrap a method and send to it in batches.
+#' batch maps a function to a batched version of that function.
 #'
 #' @param batch_fn function. The method to batch over.
 #' @param inputs. The inputs to split into batches.
@@ -7,9 +7,9 @@
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
-batch <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE) {
+batch <- function(batch_fn, inputs, ..., splitting_strategy, combination_strategy, size = 50, verbose = TRUE, stop = FALSE) {
   if (length(inputs) <= size) return(batch_fn(inputs, ...))
-  slices <- split(inputs, as.integer((seq_along(inputs) - 1) / size))
+  slices <- splitting_strategy(inputs, size)
   batches <- lapply(seq_along(slices), function(i) {
     if (verbose) cat(".")
     if (stop) batch_fn(slices[[i]], ...)
@@ -23,5 +23,5 @@ batch <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE
       )
     }
   })
-  combine_by_list(batches)
+  combination_strategy(batches)
 }

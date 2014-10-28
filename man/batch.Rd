@@ -2,9 +2,10 @@
 % Please edit documentation in R/batch.R
 \name{batch}
 \alias{batch}
-\title{Wrap a method and send to it in batches.}
+\title{batch maps a function to a batched version of that function.}
 \usage{
-batch(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE)
+batch(batch_fn, inputs, ..., splitting_strategy, combination_strategy,
+  size = 50, verbose = TRUE, stop = FALSE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
@@ -20,6 +21,6 @@ batch(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE)
 \item{inputs.}{The inputs to split into batches.}
 }
 \description{
-Wrap a method and send to it in batches.
+batch maps a function to a batched version of that function.
 }
 
