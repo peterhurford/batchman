@@ -7,7 +7,7 @@
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
-batchman <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE) {
+batch <- function(batch_fn, inputs, ..., size = 50, verbose = TRUE, stop = FALSE) {
   if (length(inputs) <= size) return(batch_fn(inputs, ...))
   slices <- split(inputs, as.integer((seq_along(inputs) - 1) / size))
   batches <- lapply(seq_along(slices), function(i) {
