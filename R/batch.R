@@ -10,23 +10,30 @@
 batch <- function(batch_fn, inputs, ..., splitting_strategy = NULL, combination_strategy, size = 50, verbose = TRUE, stop = FALSE) {
   if (length(inputs) <= size) return(batch_fn(inputs, ...))
 
-  splitting_strategy <- if(missing(spliting_strategy)) {
-    function(x, size) split(x, as.integer((seq_along(x) - 1) / size))
+  splitting_strategy <- if(is.null(splitting_strategy)) {
+    function(inputs, size) {
+      i <- 0
+      run_length <- ceiling(length(inputs) / size)
+      function() {
+        if (i >= run_length) return('batchman.is.done')
+        i <<- i+1
+        split(inputs, as.integer((seq_along(inputs) - 1) / size))[i]
+      }
+    }
   } else splitting_strategy
 
-  slices <- splitting_strategy(inputs, size)
-  batches <- lapply(seq_along(slices), function(i) {
-    if (verbose) cat(".")
-    if (stop) batch_fn(slices[[i]], ...)
-    else {
-      tryCatch(
-        batch_fn(slices[[i]], ...),
-        error = function(e) {
-          warning("Some of the data failed to process because: ", e$message)
-          NULL
-        }
-      )
-    }
-  })
-  combination_strategy(batches)
+  roller <- splitting_strategy(inputs, size)
+  while (out != 'batchman.is.done') {
+    if (verbose) cat('.')
+    out <- roller()
+    batch <- batch_fn(out)
+    tryCatch({
+      if (exists('batches')) batches <- combination_strategy(batches, batch)
+      else batches <- batch
+    }, error = function(e) {
+      if (stop) stop(e$message)
+      else warning('Some of the data failed to process because: ', e$message)
+    })
+    batches
+  }
 }
