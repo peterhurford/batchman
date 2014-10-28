@@ -4,7 +4,7 @@
 \alias{batch}
 \title{batch maps a function to a batched version of that function.}
 \usage{
-batch(batch_fn, inputs, ..., splitting_strategy, combination_strategy,
+batch(batch_fn, inputs, ..., splitting_strategy = NULL, combination_strategy,
   size = 50, verbose = TRUE, stop = FALSE)
 }
 \arguments{
