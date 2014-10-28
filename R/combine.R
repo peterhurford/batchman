@@ -8,6 +8,7 @@ combine <- function(...) {
 
 #' @inheritParams combine
 #' @rdname combine
+#' @export
 combine_by_list <- function(combination_list) {
   if (!identical(class(combination_list), 'list'))
     stop('Input must be a list. Call combine() instead.')

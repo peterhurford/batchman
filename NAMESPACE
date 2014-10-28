@@ -2,3 +2,4 @@
 
 export(batchman)
 export(combine)
+export(combine_by_list)
