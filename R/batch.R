@@ -35,15 +35,18 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
           batch <- eval(arguments)
 #           batch <- do.call(batch_fn, list(arguments))
           if (exists('batches'))
-            batches <<- combination_strategy(batches, batch)
+            batches <- combination_strategy(batches, batch)
           else
-            batches <<- batch
+            batches <- batch
           out <- roller()
         }
       }, error = function(e) {
         if (stop) {
           cat('\nERROR... HALTING.\n')
-          if(exists('batches')) { cat('Partial Progress\n'); print(batches) }
+          if(exists('batches')) {
+            batchman:::partial_progress$set(batches)
+            cat('Partial progress saved to batchman::progress()\n')
+          }
           stop(e$message)
         }
         else warning('Some of the data failed to process because: ', e$message)
@@ -52,3 +55,14 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
     batches
   }
 }
+
+partial_progress <- local({
+  .cache <- list()
+  structure(list(
+    get = function() .cache,
+    set = function(value) .cache <<- value
+  ))
+})
+
+#' @export
+progress <- function() batchman:::partial_progress$get()
