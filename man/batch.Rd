@@ -4,13 +4,15 @@
 \alias{batch}
 \title{batch maps a function to a batched version of that function.}
 \usage{
-batch(batch_fn, inputs, ..., splitting_strategy = NULL, combination_strategy,
-  size = 50, verbose = TRUE, stop = TRUE)
+batch(batch_fn, splitting_strategy = NULL, combination_strategy, size = 50,
+  verbose = TRUE, stop = TRUE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
 
-\item{...}{additional arguments to pass to \code{batch_fn}.}
+\item{splitting_strategy}{function. The strategy used to split up inputs.}
+
+\item{combination_strategy}{function. The strategy used to recombine batches.}
 
 \item{size}{numeric. The size of the packets. Default 50.}
 
@@ -18,7 +20,7 @@ batch(batch_fn, inputs, ..., splitting_strategy = NULL, combination_strategy,
 
 \item{stop}{logical. Whether to stop if an error is raised.}
 
-\item{inputs.}{The inputs to split into batches.}
+\item{...}{additional arguments to pass to \code{batch_fn}.}
 }
 \description{
 batch maps a function to a batched version of that function.
