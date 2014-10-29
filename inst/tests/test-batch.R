@@ -119,3 +119,14 @@ test_that('it stores partial progress on error', {
   expect_error(print_ex(c(fn1, fn1, fn1, fn1, identity)))  
   expect_equal(c(1, 1, 1, 1), batchman::progress())
 })
+
+test_that('it must be memory efficient', {
+  require(microbenchmark)
+  batched_toupper <- batch(toupper, 'x',
+    combination_strategy = paste, size = 1, verbose = FALSE)
+  speeds <- summary(microbenchmark(
+    batched_toupper(c('hi', 'hello', 'how are you', 'monkeys!')),
+    batched_toupper(c('hi', 'hello', 'how are you', Sys.sleep(0.001)))
+  ))
+  expect_true(speeds$min[[2]] <= speeds$median[[1]])
+})

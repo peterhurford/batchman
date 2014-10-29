@@ -12,6 +12,7 @@ Suggests:
     parallel,
     testthat,
     testthatsomemore,
-    knitr
+    knitr,
+    microbenchmark
 License: MIT <http://opensource.org/licenses/MIT>
 LazyData: true
