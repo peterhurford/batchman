@@ -66,7 +66,7 @@ key_strategy <- function(..., batch_fn, keys, size, verbose) {
   if(!any(names(args) %in% keys)) stop('Improper keys.')
   delete <- which(!keys %in% names(args))
   if (length(delete) > 0) keys <- keys[-delete]
-  where_the_inputs_at <- which(keys %in% names(args))
+  where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args)) - 1
   run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]] + 1]]))))
   if (run_length > size & verbose)
     cat('More than', size, 'inputs detected.  Batching...\n')
@@ -76,9 +76,10 @@ key_strategy <- function(..., batch_fn, keys, size, verbose) {
     on.exit(i <<- i + size)
     out <- list()
     j <- 1
-    for (input in list(...)[where_the_inputs_at]) {
-      sliceput <- input[seq(i, min(i + size - 1, run_length))]
-      out[[j]] <- sliceput
+    for (input in list(...)) {
+      out[[j]] <- if (list(input) %in% list(...)[where_the_inputs_at]) {
+        input[seq(i, min(i + size - 1, run_length))]
+      } else { input }
       j <- j + 1
     }
     out
