@@ -20,6 +20,13 @@ for (i in seq(1:5)) {
   })
 }
 
+test_that('it can recombine', {
+  batched_toupper <- batch(toupper, 'x',
+    combination_strategy = paste, size = 1, verbose = FALSE)
+  o <- batched_toupper(c('hi', 'hello', 'how are you'))
+  expect_equal('HI HELLO HOW ARE YOU', o)
+})
+
 test_that('it can batch twice by two keys', {
   reverse <- function(x, y) c(y, x)
   batched_reverse <- batch(reverse, c('x', 'y'),
