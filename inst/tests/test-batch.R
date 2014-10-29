@@ -30,18 +30,35 @@ test_that('it can recombine', {
 test_that('it can batch twice by two keys', {
   reverse <- function(x, y) c(y, x)
   batched_reverse <- batch(reverse, c('x', 'y'),
-    combination_strategy = function(x, y) c(x, y),
-    size = 1, verbose = FALSE)
+    combination_strategy = c, size = 1, verbose = FALSE)
   o <- batched_reverse(c(1, 2, 3), c(4, 5, 6))
   expect_equal(c(4, 1, 5, 2, 6, 3), o)
 })
 
 test_that('it can batch by two keys and include two nonbatched params', {
-  pending()
+  record_last_arg <- list()
+  add_first_and_second_arg <- function(w, x, y, z) {
+    record_last_arg <<- z
+    w + x
+  }
+  batched_add <- batch(add_first_and_second_arg, c('x', 'y'),
+    combination_strategy = c, size = 1, verbose = FALSE)
+  o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9), c(10, 11, 12))
+  expect_equal(c(10, 11, 12), record_last_arg)
+  expect_equal(c(5, 7, 9), o)
 })
 
 test_that('it can batch by two keys and include a nonbatched param as the first param', {
-  pending()
+  record_first_arg <- list()
+  add_second_and_third_arg <- function(x, y, z) {
+    record_first_arg <<- x
+    y + z
+  }
+  batched_add <- batch(add_second_and_third_arg, c('y', 'z'),
+    combination_strategy = c, size = 1, verbose = FALSE)
+  o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9))
+  expect_equal(c(1, 2, 3), record_first_arg)
+  expect_equal(c(11, 13, 15), o)
 })
 
 test_that('it can batch by an existant key and a nonexistant key', {
