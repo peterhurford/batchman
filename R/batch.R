@@ -26,20 +26,23 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
       } else splitting_strategy
       roller <- splitting_strategy(inputs, size)
       out <- roller()
-      batches <- batch_fn(out)
       while (out != 'batchman.is.done') {
         if (verbose) cat('.')
         arguments <- substitute(alist(...))
         arguments[[2]] <- out
         batch <- do.call(batch_fn, list(arguments))
         tryCatch({
-          batches <<- combination_strategy(batches, batch)
+          if (exists('batches'))
+            batches <- combination_strategy(batches, batch)
+          else
+            batches <- batch
         }, error = function(e) {
           if (stop) stop(e$message)
           else warning('Some of the data failed to process because: ', e$message)
         })
         out <- roller()
       }
+      batches
     }
   }
 }
