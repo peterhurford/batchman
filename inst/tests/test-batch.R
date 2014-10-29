@@ -78,7 +78,17 @@ test_that('it can batch by two keys, surrounded by nonbatched params', {
 })
 
 test_that('it can batch by an existant key and a nonexistant key', {
-  pending()
+  batched_identity <- batch(identity, c('x', 'y'),
+    combination_strategy = paste0, size = 1, verbose = FALSE
+  )
+  expect_equal('abc', batched_identity(c('a', 'b', 'c')))
+})
+
+test_that('it can batch by an existant key and a nonexistant key (the other way)', {
+  batched_identity <- batch(identity, c('y', 'x'),
+    combination_strategy = paste0, size = 1, verbose = FALSE
+  )
+  expect_equal('def', batched_identity(c('d', 'e', 'f')))
 })
 
 test_that('it can batch by either one or the other key provided', {
