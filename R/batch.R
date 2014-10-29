@@ -58,7 +58,8 @@ progress <- function() batchman:::partial_progress$get()
 
 key_strategy <- function(..., batch_fn, keys, size) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
-  if(!all(keys %in% names(args))) stop('Improper keys.')
+  if(!any(names(args) %in% keys)) stop('Improper keys.')
+  keys <- keys[-which(!keys %in% names(args))]
   where_the_inputs_at <- which(keys %in% names(args))
   run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]] + 1]]))))
   if (run_length > size) cat('More than', size, 'inputs detected.  Batching...\n')
