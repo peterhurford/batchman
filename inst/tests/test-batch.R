@@ -107,6 +107,20 @@ test_that('it can batch by either one or the other key provided', {
   expect_equal(c('bananas! abc', 'bananas! de'), b)
 })
 
+test_that('it can handle functions with splats', {
+  fruit_fn <- function(...) {
+    if ('apples' %in% names(list(...))) return('apples!')
+    if ('bananas' %in% names(list(...))) return('bananas!')
+    if ('pears' %in% names(list(...))) return('pears!')
+  }
+  batched_fruit <- batch(fruit_fn, c('apples', 'bananas', 'pears'),
+    combination_strategy = paste, size = 3, verbose = FALSE
+  )
+  expect_equal('apples! apples!', batched_fruit(apples = c(1,2,3,4,5)))
+  expect_equal('bananas! bananas!', batched_fruit(bananas = c(1,2,3,4,5)))
+  expect_equal('pears! pears!', batched_fruit(pears = c(1,2,3,4,5)))
+})
+
 test_that('it stores partial progress on error', {
   batchman:::partial_progress$clear()
   expect_equal(list(), batchman::progress())
