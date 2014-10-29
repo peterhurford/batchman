@@ -61,6 +61,22 @@ test_that('it can batch by two keys and include a nonbatched param as the first 
   expect_equal(c(11, 13, 15), o)
 })
 
+test_that('it can batch by two keys, surrounded by nonbatched params', {
+  record_last_arg <- list()
+  record_first_arg <- list()
+  add_middle_args <- function(w, x, y, z) {
+    record_first_arg <<- w
+    record_last_arg <<- z
+    x + y
+  }
+  batched_add <- batch(add_middle_args, c('x', 'y'),
+    combination_strategy = c, size = 1, verbose = FALSE)
+  o <- batched_add(c(10, 11, 12), c(13, 14, 15), c(16, 17, 18), c(19, 20, 21))
+  expect_equal(c(10, 11, 12), record_first_arg)
+  expect_equal(c(19, 20, 21), record_last_arg)
+  expect_equal(c(29, 31, 33), o)
+})
+
 test_that('it can batch by an existant key and a nonexistant key', {
   pending()
 })
