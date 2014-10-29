@@ -92,7 +92,19 @@ test_that('it can batch by an existant key and a nonexistant key (the other way)
 })
 
 test_that('it can batch by either one or the other key provided', {
-  pending()
+  apple_or_banana_fn <- function(apples = NULL, bananas = NULL) {
+    if (!is.null(apples))
+      paste('apples!', paste(apples, collapse=''))
+    else
+      paste('bananas!', paste(bananas, collapse=''))
+  }
+  batched_aob <- batch(apple_or_banana_fn, c('apples', 'bananas'),
+    combination_strategy = c, size = 3, verbose = FALSE
+  )
+  a <- batched_aob(apples = c(1, 2, 3, 4, 5))
+  expect_equal(c('apples! 123', 'apples! 45'), a)
+  b <- batched_aob(bananas = c('a', 'b', 'c', 'd', 'e'))
+  expect_equal(c('bananas! abc', 'bananas! de'), b)
 })
 
 test_that('it stores partial progress on error', {
