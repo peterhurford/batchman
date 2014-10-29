@@ -12,7 +12,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
   function(...) {
     splitting_strategy <- if(is.null(splitting_strategy))
-      batchman:::key_strategy else splitting_strategy
+      batchman:::default_strategy else splitting_strategy
     tryCatch({
       roller <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
@@ -61,7 +61,7 @@ partial_progress <- local({
 #' @export
 progress <- function() batchman:::partial_progress$get()
 
-key_strategy <- function(..., batch_fn, keys, size, verbose) {
+default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   if(!any(names(args) %in% keys)) stop('Improper keys.')
   delete <- which(!keys %in% names(args))
