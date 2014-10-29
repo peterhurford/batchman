@@ -8,11 +8,15 @@
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
-batch <- function(batch_fn, keys, splitting_strategy = NULL, combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
+batch <- function(batch_fn, keys, splitting_strategy = NULL,
+  combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
   function(...) {
-    splitting_strategy <- if(is.null(splitting_strategy)) batchman:::key_strategy else splitting_strategy
+    splitting_strategy <- if(is.null(splitting_strategy))
+      batchman:::key_strategy else splitting_strategy
     tryCatch({
-      roller <- splitting_strategy(..., batch_fn = batch_fn, keys = keys, size = size, verbose = verbose)
+      roller <- splitting_strategy(..., batch_fn = batch_fn,
+        keys = keys, size = size, verbose = verbose
+      )
       out <- roller()
       while (!identical(out, 'batchman.is.done')) {
         if (verbose) cat('.')
@@ -64,7 +68,8 @@ key_strategy <- function(..., batch_fn, keys, size, verbose) {
   if (length(delete) > 0) keys <- keys[-delete]
   where_the_inputs_at <- which(keys %in% names(args))
   run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]] + 1]]))))
-  if (run_length > size & verbose) cat('More than', size, 'inputs detected.  Batching...\n')
+  if (run_length > size & verbose)
+    cat('More than', size, 'inputs detected.  Batching...\n')
   i <- 1
   function() {
     if (i > run_length) return('batchman.is.done')
