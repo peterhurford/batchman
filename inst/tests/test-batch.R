@@ -20,6 +20,26 @@ for (i in seq(1:5)) {
   })
 }
 
+test_that('it can batch twice by two keys', {
+  pending()
+})
+
+test_that('it can batch by two keys and include two nonbatched params', {
+  pending()
+})
+
+test_that('it can batch by two keys and include a nonbatched param as the first param', {
+  pending()
+})
+
+test_that('it can batch by an existant key and a nonexistant key', {
+  pending()
+})
+
+test_that('it can batch by either one or the other key provided', {
+  pending()
+})
+
 test_that('it stores partial progress on error', {
   batchman:::partial_progress$clear()
   expect_equal(list(), batchman::progress())
