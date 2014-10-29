@@ -17,7 +17,6 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
       splitting_strategy <- if(is.null(splitting_strategy)) {
         function(inputs, size) {
           i <- 1
-#          run_length <- ceiling(length(inputs) / size)
           function() {
             if (i >= run_length) return('batchman.is.done')
             on.exit(i <<- i + size)
