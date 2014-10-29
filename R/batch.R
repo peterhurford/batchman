@@ -13,17 +13,7 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
     if (length(..1) <= size) return(batch_fn(...))
     else {
       if(verbose) cat('More than', size, 'inputs detected.  Batching...\n')
-      run_length <- length(..1)
-      splitting_strategy <- if(is.null(splitting_strategy)) {
-        function(inputs, size) {
-          i <- 1
-          function() {
-            if (i >= run_length) return('batchman.is.done')
-            on.exit(i <<- i + size)
-            inputs[seq(i, min(i + size - 1, run_length))]
-          }
-        }
-      } else splitting_strategy
+      splitting_strategy <- if(is.null(splitting_strategy)) batchman:::key_strategy else splitting_strategy
       tryCatch({
         roller <- splitting_strategy(..1, size)
         out <- roller()
@@ -66,3 +56,13 @@ partial_progress <- local({
 
 #' @export
 progress <- function() batchman:::partial_progress$get()
+
+key_strategy <- function(inputs, size) {
+  run_length <- length(inputs)
+  i <- 1
+  function() {
+    if (i >= run_length) return('batchman.is.done')
+    on.exit(i <<- i + size)
+    inputs[seq(i, min(i + size - 1, run_length))]
+  }
+}
