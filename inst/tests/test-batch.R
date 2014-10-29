@@ -41,7 +41,7 @@ test_that('it can batch by two keys and include two nonbatched params', {
     record_last_arg <<- z
     w + x
   }
-  batched_add <- batch(add_first_and_second_arg, c('x', 'y'),
+  batched_add <- batch(add_first_and_second_arg, c('w', 'x'),
     combination_strategy = c, size = 1, verbose = FALSE)
   o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9), c(10, 11, 12))
   expect_equal(c(10, 11, 12), record_last_arg)
