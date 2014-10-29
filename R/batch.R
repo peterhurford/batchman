@@ -8,17 +8,21 @@
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
-batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
+batch <- function(batch_fn, keys, splitting_strategy = NULL, combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
   function(...) {
     splitting_strategy <- if(is.null(splitting_strategy)) batchman:::key_strategy else splitting_strategy
     tryCatch({
-      roller <- splitting_strategy(..1, size)
+      roller <- splitting_strategy(..., batch_fn = batch_fn, keys = keys, size = size)
       out <- roller()
       while (!identical(out, 'batchman.is.done')) {
         if (verbose) cat('.')
         arguments <- substitute(alist(...))
-        arguments[[2]] <- out
         arguments[[1]] <- quote(batch_fn)
+        k <- 1
+        for (output in out) {
+          arguments[[k+1]] <- out[[k]]
+          k <- k + 1
+        }
         batch <- eval(arguments)
         if (exists('batches'))
           batches <- combination_strategy(batches, batch)
@@ -52,13 +56,23 @@ partial_progress <- local({
 #' @export
 progress <- function() batchman:::partial_progress$get()
 
-key_strategy <- function(inputs, size) {
-  run_length <- length(inputs)
+key_strategy <- function(..., batch_fn, keys, size) {
+  args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
+  if(!all(keys %in% names(args))) stop('Improper keys.')
+  where_the_inputs_at <- which(keys %in% names(args))
+  run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]] + 1]]))))
   if (run_length > size) cat('More than', size, 'inputs detected.  Batching...\n')
   i <- 1
   function() {
     if (i > run_length) return('batchman.is.done')
     on.exit(i <<- i + size)
-    inputs[seq(i, min(i + size - 1, run_length))]
+    out <- list()
+    j <- 1
+    for (input in list(...)[where_the_inputs_at]) {
+      sliceput <- input[seq(i, min(i + size - 1, run_length))]
+      out[[j]] <- sliceput
+      j <- j + 1
+    }
+    out
   }
 }
