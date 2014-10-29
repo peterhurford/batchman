@@ -13,36 +13,43 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
     if (length(..1) <= size) return(batch_fn(...))
     else {
       if(verbose) cat('More than', size, 'inputs detected.  Batching...\n')
+      run_length <- length(..1)
       splitting_strategy <- if(is.null(splitting_strategy)) {
-        function(..1, size) {
-          i <- 0
-          run_length <- ceiling(length(..1) / size)
+        function(inputs, size) {
+          i <- 1
+#          run_length <- ceiling(length(inputs) / size)
           function() {
             if (i >= run_length) return('batchman.is.done')
-            i <<- i+1
-            split(..1, as.integer((seq_along(..1) - 1) / size))[i]
+            on.exit(i <<- i + size)
+            inputs[seq(i, min(i + size - 1, run_length))]
           }
         }
       } else splitting_strategy
-      roller <- splitting_strategy(inputs, size)
-      out <- roller()
-      while (out != 'batchman.is.done') {
-        if (verbose) cat('.')
-        arguments <- substitute(alist(...))
-        arguments[[2]] <- out
-        batch <- do.call(batch_fn, list(arguments))
-        tryCatch({
-          if (exists('batches'))
-            batches <- combination_strategy(batches, batch)
-          else
-            batches <- batch
-        }, error = function(e) {
-          if (stop) stop(e$message)
-          else warning('Some of the data failed to process because: ', e$message)
-        })
+      tryCatch({
+        roller <- splitting_strategy(..1, size)
         out <- roller()
-      }
-      batches
+        while (!identical(out, 'batchman.is.done')) {
+          if (verbose) cat('.')
+          arguments <- substitute(alist(...))
+          arguments[[2]] <- out
+          arguments[[1]] <- quote(batch_fn)
+          batch <- eval(arguments)
+#           batch <- do.call(batch_fn, list(arguments))
+          if (exists('batches'))
+            batches <<- combination_strategy(batches, batch)
+          else
+            batches <<- batch
+          out <- roller()
+        }
+      }, error = function(e) {
+        if (stop) {
+          cat('\nERROR... HALTING.\n')
+          if(exists('batches')) { cat('Partial Progress\n'); print(batches) }
+          stop(e$message)
+        }
+        else warning('Some of the data failed to process because: ', e$message)
+      })
     }
+    batches
   }
 }
