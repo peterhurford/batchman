@@ -21,7 +21,12 @@ for (i in seq(1:5)) {
 }
 
 test_that('it can batch twice by two keys', {
-  pending()
+  reverse <- function(x, y) c(y, x)
+  batched_reverse <- batch(reverse, c('x', 'y'),
+    combination_strategy = function(x, y) c(x, y),
+    size = 1, verbose = FALSE)
+  o <- batched_reverse(c(1, 2, 3), c(4, 5, 6))
+  expect_equal(c(4, 1, 5, 2, 6, 3), o)
 })
 
 test_that('it can batch by two keys and include two nonbatched params', {
