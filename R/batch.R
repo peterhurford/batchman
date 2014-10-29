@@ -20,7 +20,6 @@ batch <- function(batch_fn, splitting_strategy = NULL, combination_strategy, siz
         arguments[[2]] <- out
         arguments[[1]] <- quote(batch_fn)
         batch <- eval(arguments)
-#           batch <- do.call(batch_fn, list(arguments))
         if (exists('batches'))
           batches <- combination_strategy(batches, batch)
         else
