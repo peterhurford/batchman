@@ -12,7 +12,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL, combination_strateg
   function(...) {
     splitting_strategy <- if(is.null(splitting_strategy)) batchman:::key_strategy else splitting_strategy
     tryCatch({
-      roller <- splitting_strategy(..., batch_fn = batch_fn, keys = keys, size = size)
+      roller <- splitting_strategy(..., batch_fn = batch_fn, keys = keys, size = size, verbose = verbose)
       out <- roller()
       while (!identical(out, 'batchman.is.done')) {
         if (verbose) cat('.')
@@ -32,10 +32,10 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL, combination_strateg
       }
     }, error = function(e) {
       if (stop) {
-        cat('\nERROR... HALTING.\n')
+        if (verbose) cat('\nERROR... HALTING.\n')
         if(exists('batches')) {
           batchman:::partial_progress$set(batches)
-          cat('Partial progress saved to batchman::progress()\n')
+          if (verbose) cat('Partial progress saved to batchman::progress()\n')
         }
         stop(e$message)
       }
@@ -57,14 +57,14 @@ partial_progress <- local({
 #' @export
 progress <- function() batchman:::partial_progress$get()
 
-key_strategy <- function(..., batch_fn, keys, size) {
+key_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   if(!any(names(args) %in% keys)) stop('Improper keys.')
   delete <- which(!keys %in% names(args))
   if (length(delete) > 0) keys <- keys[-delete]
   where_the_inputs_at <- which(keys %in% names(args))
   run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]] + 1]]))))
-  if (run_length > size) cat('More than', size, 'inputs detected.  Batching...\n')
+  if (run_length > size & verbose) cat('More than', size, 'inputs detected.  Batching...\n')
   i <- 1
   function() {
     if (i > run_length) return('batchman.is.done')
