@@ -49,6 +49,7 @@ partial_progress <- local({
   .cache <- list()
   structure(list(
     get = function() .cache,
+    clear = function() .cache <<- list(),
     set = function(value) .cache <<- value
   ))
 })
