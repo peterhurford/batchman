@@ -18,10 +18,10 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         keys = keys, size = size, verbose = verbose
       )
       out <- roller()
+      arguments <- substitute(alist(...))
+      arguments[[1]] <- quote(batch_fn)
       while (!identical(out, 'batchman.is.done')) {
         if (verbose) cat('.')
-        arguments <- substitute(alist(...))
-        arguments[[1]] <- quote(batch_fn)
         k <- 1
         for (output in out) {
           arguments[[k+1]] <- out[[k]]

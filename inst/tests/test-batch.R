@@ -141,14 +141,16 @@ test_that('it must not evaluate unneeded arguments', {
   expect_equal(1, batched_fn(1, identity()))  # If identity() were evaluated, it would error.
 })
 
-test_that('it must be memory efficient', {
+test_that('it must be more efficient to batch than to execute an O(x^2) function directly', {
+  # Simulate an O(x^2) function
+  sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-11)
+  batched_sleep_square <- batch(sleep_square, 'input',
+    combination_strategy = c, size = 1000, verbose = FALSE)
+
   require(microbenchmark)
-  fn <- function(x, y) x
-  batched_fn <- batch(fn, 'x',
-    combination_strategy = c, size = 1, verbose = FALSE)
   speeds <- summary(microbenchmark(times = 10,
-    fn(x = 1, y = Sys.sleep(0.01)),
-    batched_fn(x = 1, y = Sys.sleep(0.01))
+    sleep_square(seq(1:10^5)),
+    batched_sleep_square(seq(1:10^5))
   ))
-  expect_true(speeds$median[[2]] <= speeds$median[[1]] * 10)
+  expect_true(speeds$median[[2]] < speeds$median[[1]])
 })
