@@ -9,50 +9,25 @@
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE,
-  stop = TRUE) {
-  splitting_strategy <-
-    if(is.null(splitting_strategy)) batchman:::default_strategy
-    else if (identical('simple', splitting_strategy)) batchman:::simple_strategy
-    else splitting_strategy
+  combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
+  splitting_strategy <- decide_strategy(splitting_strategy)
 
   inert_wrapper <- function(x, error) x
-  wrapper <- if (!trycatch) tryCatch else inert_wrapper
+  wrapper <- if (isTRUE(trycatch)) tryCatch else inert_wrapper
 
   function(...) {
-    wrapper({
+    batches <- structure(list(), class = "no_batches")
+    wrapper(error = default_batch_error, {
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-      out <- next_batch()
-      browser()
-      batches <- NULL
-      # arguments <- substitute(alist(...))
-      # arguments[[1]] <- quote(batch_fn)
-      while (!identical(out, 'batchman.is.done')) {
-        if (verbose) cat('.')
-        batch <- do.call(batch_fn, out)
-        # k <- 1
-        # for (output in out) {
-        #   arguments[[k+1]] <- out[[k]]
-        #   k <- k + 1
-        # }
-        # batch <- eval(arguments)
-        batches <- combination_strategy(batches, batch)
-        out <- next_batch()
+
+      while (!identical(new_arguments <- next_batch(), 'batchman.is.done')) {
+        if (isTRUE(verbose)) cat('.')
+        batches <- combination_strategy(batches, do.call(batch_fn, new_arguments))
       }
-    }, error = function(e) {
-      if (stop) {
-        if (verbose) cat('\nERROR... HALTING.\n')
-        if(exists('batches')) {
-          batchman:::partial_progress$set(batches)
-          if (verbose) cat('Partial progress saved to batchman::progress()\n')
-        }
-        stop(e$message)
-      }
-      else warning('Some of the data failed to process because: ', e$message)
     })
-    if (exists('batches')) batches else out
+    if (is(batches, "no_batches")) new_arguments else batches
   }
 }
 
@@ -108,3 +83,22 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
     out
   }
 }
+
+decide_strategy <- function(splitting_strategy) {
+  if(is.null(splitting_strategy)) batchman:::default_strategy
+  else if (identical('simple', splitting_strategy)) batchman:::simple_strategy
+  else splitting_strategy
+}
+
+default_batch_error <- function(e) {
+  if (stop) {
+    if (verbose) cat('\nERROR... HALTING.\n')
+    #if(exists('batches')) {
+    #  batchman:::partial_progress$set(batches)
+    #  if (verbose) cat('Partial progress saved to batchman::progress()\n')
+    #}
+    stop(e$message)
+  }
+  else warning('Some of the data failed to process because: ', e$message)
+}
+
