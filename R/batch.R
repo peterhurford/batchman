@@ -21,25 +21,25 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
 
   function(...) {
     wrapper({
-      roller <- splitting_strategy(..., batch_fn = batch_fn,
+      next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-      out <- roller()
-      arguments <- substitute(alist(...))
-      arguments[[1]] <- quote(batch_fn)
+      out <- next_batch()
+      browser()
+      batches <- NULL
+      # arguments <- substitute(alist(...))
+      # arguments[[1]] <- quote(batch_fn)
       while (!identical(out, 'batchman.is.done')) {
         if (verbose) cat('.')
-        k <- 1
-        for (output in out) {
-          arguments[[k+1]] <- out[[k]]
-          k <- k + 1
-        }
-        batch <- eval(arguments)
-        if (exists('batches'))
-          batches <- combination_strategy(batches, batch)
-        else
-          batches <- batch
-        out <- roller()
+        batch <- do.call(batch_fn, out)
+        # k <- 1
+        # for (output in out) {
+        #   arguments[[k+1]] <- out[[k]]
+        #   k <- k + 1
+        # }
+        # batch <- eval(arguments)
+        batches <- combination_strategy(batches, batch)
+        out <- next_batch()
       }
     }, error = function(e) {
       if (stop) {
