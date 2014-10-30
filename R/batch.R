@@ -10,9 +10,11 @@
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
+  splitting_strategy <-
+    if(is.null(splitting_strategy)) batchman:::default_strategy
+    else if (identical('simple', splitting_strategy)) batchman:::simple_strategy
+    else splitting_strategy
   function(...) {
-    splitting_strategy <- if(is.null(splitting_strategy))
-      batchman:::default_strategy else splitting_strategy
     tryCatch({
       roller <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
@@ -60,6 +62,22 @@ partial_progress <- local({
 
 #' @export
 progress <- function() batchman:::partial_progress$get()
+
+simple_strategy <- function(..., batch_fn, keys, size, verbose) {
+  if (length(keys) > 1) stop('Simple strategy only works for one key.')
+  args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
+  if (!identical(keys, names(args)[[2]]))
+    stop('Simple strategy only works when the key is the first arg.')
+  run_length <- eval(bquote(NROW(.(args[[2]]))))
+  if (run_length > size & verbose)
+    cat('More than', size, 'inputs detected.  Batching...\n')
+  i <- 1
+  function() {
+    if (i > run_length) return('batchman.is.done')
+    on.exit(i <<- i + size)
+    list(eval(args[[2]])[seq(i, min(i + size - 1, run_length))])
+  }
+}
 
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)

@@ -145,12 +145,31 @@ test_that('it must be more efficient to batch than to execute an O(x^2) function
   # Simulate an O(x^2) function
   sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-11)
   batched_sleep_square <- batch(sleep_square, 'input',
-    combination_strategy = c, size = 1000, verbose = FALSE)
+    splitting_strategy = 'simple', combination_strategy = c,
+    size = 1000, verbose = FALSE)
 
   require(microbenchmark)
   speeds <- summary(microbenchmark(times = 10,
     sleep_square(seq(1:10^5)),
     batched_sleep_square(seq(1:10^5))
   ))
+  expect_true(speeds$median[[2]] < speeds$median[[1]])
+})
+
+test_that('the simple splitting strategy is more efficient than the default strategy', {
+  # Simulate an O(x^2) function
+  sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-12)
+  bss_simple <- batch(sleep_square, 'input',
+    splitting_strategy = 'simple', combination_strategy = c,
+    size = 1000, verbose = FALSE)
+  bss_default <- batch(sleep_square, 'input', combination_strategy = c,
+    size = 1000, verbose = FALSE)
+
+  require(microbenchmark)
+  speeds <- summary(microbenchmark(times = 10,
+    bss_default(seq(1:10^5)),
+    bss_simple(seq(1:10^5))
+  ))
+  browser()
   expect_true(speeds$median[[2]] < speeds$median[[1]])
 })
