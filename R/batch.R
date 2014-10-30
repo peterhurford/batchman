@@ -9,13 +9,18 @@
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy, size = 50, verbose = TRUE, stop = TRUE) {
+  combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE,
+  stop = TRUE) {
   splitting_strategy <-
     if(is.null(splitting_strategy)) batchman:::default_strategy
     else if (identical('simple', splitting_strategy)) batchman:::simple_strategy
     else splitting_strategy
+
+  inert_wrapper <- function(x, error) x
+  wrapper <- if (!trycatch) tryCatch else inert_wrapper
+
   function(...) {
-    tryCatch({
+    wrapper({
       roller <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
