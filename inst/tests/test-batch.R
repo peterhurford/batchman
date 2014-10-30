@@ -170,6 +170,5 @@ test_that('the simple splitting strategy is more efficient than the default stra
     bss_default(seq(1:10^5)),
     bss_simple(seq(1:10^5))
   ))
-  browser()
   expect_true(speeds$median[[2]] < speeds$median[[1]])
 })
