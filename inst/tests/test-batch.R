@@ -134,6 +134,13 @@ test_that('it stores partial progress on error', {
   expect_equal(c(1, 1, 1, 1), batchman::progress())
 })
 
+test_that('it must not evaluate unneeded arguments', {
+  fn <- function(x, y) x
+  batched_fn <- batch(fn, 'x',
+    combination_strategy = c, size = 1, verbose = FALSE)
+  expect_equal(1, batched_fn(1, identity()))  # If identity() were evaluated, it would error.
+})
+
 test_that('it must be memory efficient', {
   require(microbenchmark)
   fn <- function(x, y) x
