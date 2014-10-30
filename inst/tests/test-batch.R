@@ -136,11 +136,12 @@ test_that('it stores partial progress on error', {
 
 test_that('it must be memory efficient', {
   require(microbenchmark)
-  batched_toupper <- batch(toupper, 'x',
-    combination_strategy = paste, size = 1, verbose = FALSE)
-  speeds <- summary(microbenchmark(
-    batched_toupper(c('hi', 'hello', 'how are you', 'monkeys!')),
-    batched_toupper(c('hi', 'hello', 'how are you', Sys.sleep(0.001)))
+  fn <- function(x, y) x
+  batched_fn <- batch(fn, 'x',
+    combination_strategy = c, size = 1, verbose = FALSE)
+  speeds <- summary(microbenchmark(times = 10,
+    fn(x = 1, y = Sys.sleep(0.01)),
+    batched_fn(x = 1, y = Sys.sleep(0.01))
   ))
-  expect_true(speeds$min[[2]] <= speeds$median[[1]])
+  expect_true(speeds$median[[2]] <= speeds$median[[1]] * 10)
 })
