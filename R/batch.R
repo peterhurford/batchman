@@ -14,6 +14,7 @@
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
+  if (isTRUE(stop)) trycatch <- TRUE
   splitting_strategy <- decide_strategy(splitting_strategy)
   function(...) {
     body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
