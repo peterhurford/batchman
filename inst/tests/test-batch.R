@@ -1,39 +1,39 @@
-# context('batch')
+context('batch')
 
-# check_for_batch_length_of <- function(len) {
-#   batch_length <- 0
-#   batch_check <- function(x)
-#     if (batch_length == 0) batch_length <<- length(x)
-#   batch_check(seq(1:10))
-#   expect_equal(10, batch_length)
-#   batch_length <- 0
-#   batch_run <- batch(batch_check, 'x',
-#     combination_strategy = paste0, size = len, verbose = FALSE
-#   )
-#   batch_run(seq(1:10))
-#   expect_equal(len, batch_length)
-# }
+check_for_batch_length_of <- function(len) {
+  batch_length <- 0
+  batch_check <- function(x)
+    if (batch_length == 0) batch_length <<- length(x)
+  batch_check(seq(1:10))
+  expect_equal(10, batch_length)
+  batch_length <- 0
+  batch_run <- batch(batch_check, 'x',
+    combination_strategy = paste0, size = len, verbose = FALSE
+  )
+  batch_run(seq(1:10))
+  expect_equal(len, batch_length)
+}
 
-# for (i in seq(1:5)) {
-#   test_that(paste('it sends things in batches of size', i), {
-#     check_for_batch_length_of(i)
-#   })
-# }
+for (i in seq(1:5)) {
+  test_that(paste('it sends things in batches of size', i), {
+    check_for_batch_length_of(i)
+  })
+}
 
-# test_that('it can recombine', {
-#   batched_toupper <- batch(toupper, 'x',
-#     combination_strategy = paste, size = 1, verbose = FALSE)
-#   o <- batched_toupper(c('hi', 'hello', 'how are you'))
-#   expect_equal('HI HELLO HOW ARE YOU', o)
-# })
+test_that('it can recombine', {
+  batched_toupper <- batch(toupper, 'x',
+    combination_strategy = paste, size = 1, verbose = FALSE)
+  o <- batched_toupper(c('hi', 'hello', 'how are you'))
+  expect_equal('HI HELLO HOW ARE YOU', o)
+})
 
-# test_that('it can batch twice by two keys', {
-#   reverse <- function(x, y) c(y, x)
-#   batched_reverse <- batch(reverse, c('x', 'y'),
-#     combination_strategy = c, size = 1, verbose = FALSE)
-#   o <- batched_reverse(c(1, 2, 3), c(4, 5, 6))
-#   expect_equal(c(4, 1, 5, 2, 6, 3), o)
-# })
+test_that('it can batch twice by two keys', {
+  reverse <- function(x, y) c(y, x)
+  batched_reverse <- batch(reverse, c('x', 'y'),
+    combination_strategy = c, size = 1, verbose = FALSE)
+  o <- batched_reverse(c(1, 2, 3), c(4, 5, 6))
+  expect_equal(c(4, 1, 5, 2, 6, 3), o)
+})
 
 test_that('it can batch by two keys and include two nonbatched params', {
   record_last_arg <- list()

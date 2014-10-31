@@ -11,17 +11,12 @@
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
   splitting_strategy <- decide_strategy(splitting_strategy)
-
-  inert_wrapper <- function(x, error) x
-  wrapper <- if (isTRUE(trycatch)) tryCatch else inert_wrapper
-
   function(...) {
     batches <- structure(list(), class = "no_batches")
-    wrapper(error = default_batch_error, {
+    body_fn <- function(...) {
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-
       run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
       new_call <- next_batch()
       while (!identical(new_call, 'batchman.is.done')) {
@@ -30,8 +25,14 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
         new_call <- next_batch()
       }
-    })
-    if (is(batches, "no_batches")) new_arguments else batches
+      if (is(batches, "no_batches")) new_arguments else batches
+    }
+    if (isTRUE(trycatch))
+      tryCatch(
+        batches <- body_fn(...),
+        error = function(e) default_batch_error(e, batches)
+      )
+    else body_fn(...)
   }
 }
 
@@ -72,13 +73,13 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   }
 }
 
-default_batch_error <- function(e) {
+default_batch_error <- function(e, batches) {
   if (stop) {
     if (verbose) cat('\nERROR... HALTING.\n')
-    #if(exists('batches')) {
-    #  batchman:::partial_progress$set(batches)
-    #  if (verbose) cat('Partial progress saved to batchman::progress()\n')
-    #}
+    if(exists('batches')) {
+      batchman:::partial_progress$set(batches)
+      if (verbose) cat('Partial progress saved to batchman::progress()\n')
+    }
     stop(e$message)
   }
   else warning('Some of the data failed to process because: ', e$message)
