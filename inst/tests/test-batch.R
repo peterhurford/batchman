@@ -146,7 +146,6 @@ test_that('it must be more efficient to batch than to execute an O(x^2) function
   sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-11)
   batched_sleep_square <- batch(sleep_square, 'input',
     combination_strategy = c, size = 1000, verbose = FALSE)
-
   require(microbenchmark)
   speeds <- summary(microbenchmark(times = 10,
     sleep_square(seq(1:10^5)),

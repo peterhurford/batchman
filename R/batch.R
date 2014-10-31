@@ -12,14 +12,14 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
   splitting_strategy <- decide_strategy(splitting_strategy)
   function(...) {
-    batches <<- structure(list(), class = "no_batches")
+    batches <- structure(list(), class = "no_batches")
     body_fn <- function(...) {
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
       run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
       new_call <- next_batch()
-      while (!identical(new_call, 'batchman.is.done')) {
+      while (!is(new_call, 'batchman.is.done')) {
         if (isTRUE(verbose)) cat('.')
         batch <- eval(new_call, envir = run_env)
         batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
@@ -62,7 +62,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   
   second_arg <- quote(x[seq(y, z)])
   function() {
-    if (i > run_length) return('batchman.is.done')
+    if (i > run_length) return(structure(list(), class = 'batchman.is.done'))
     for (j in where_the_inputs_at) {
       second_arg[[2]] <- args[[j]]
       second_arg[[3]][[2]] <- i
