@@ -69,6 +69,31 @@ simple_strategy <- function(..., batch_fn, keys, size, verbose) {
   }
 }
 
+complex_strategy <- function(..., batch_fn, keys, size, verbose) {
+  args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
+  if(!any(names(args) %in% keys)) stop('Improper keys.')
+  delete <- which(!keys %in% names(args))
+  if (length(delete) > 0) kes <- keys[-delete]
+  where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args))
+  run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))), envir = parent.frame(2))
+  if (run_length > size & verbose)
+    cat('More than', size, 'inputs detected.  Batching...\n')
+  i <- 1
+  
+  second_arg <- quote(x[seq(y, z)])
+  function() {
+    if (i > run_length) return('batchman.is.done')
+    for (j in where_the_inputs_at) {
+      second_arg[[2]] <- args[[j]]
+      second_arg[[3]][[2]] <- i
+      second_arg[[3]][[3]] <- min(i + size - 1, run_length)
+      args[[j]] <- second_arg
+    }
+    i <<- i + size
+    args
+  }
+}
+
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   if(!any(names(args) %in% keys)) stop('Improper keys.')
@@ -95,7 +120,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
 }
 
 decide_strategy <- function(splitting_strategy) {
-  if(is.null(splitting_strategy)) batchman:::default_strategy
+  if(identical('complex', splitting_strategy)) batchman:::complex_strategy
   else if (identical('simple', splitting_strategy)) batchman:::simple_strategy
   else splitting_strategy
 }
