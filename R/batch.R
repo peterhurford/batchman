@@ -22,9 +22,13 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         keys = keys, size = size, verbose = verbose
       )
 
-      while (!identical(new_arguments <- next_batch(), 'batchman.is.done')) {
+      run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
+      new_call <- NULL
+      while (!identical(new_call, 'batchman.is.done')) {
+        new_call <- next_batch()
         if (isTRUE(verbose)) cat('.')
-        batches <- combination_strategy(batches, do.call(batch_fn, new_arguments))
+        batch <- eval(new_call, envir = run_env)
+        batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
       }
     })
     if (is(batches, "no_batches")) new_arguments else batches
@@ -48,14 +52,20 @@ simple_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   if (!identical(keys, names(args)[[2]]))
     stop('Simple strategy only works when the key is the first arg.')
-  run_length <- eval(bquote(NROW(.(args[[2]]))))
+  run_length <- eval(bquote(NROW(.(args[[2]]))), envir = parent.frame(2))
   if (run_length > size & verbose)
     cat('More than', size, 'inputs detected.  Batching...\n')
   i <- 1
+  
+  second_arg <- quote(x[seq(y, z)])
   function() {
     if (i > run_length) return('batchman.is.done')
-    on.exit(i <<- i + size)
-    list(eval(args[[2]])[seq(i, min(i + size - 1, run_length))])
+    second_arg[[2]] <- args[[2]]
+    second_arg[[3]][[2]] <- i
+    second_arg[[3]][[3]] <- min(i + size - 1, run_length)
+    args[[2]] <- second_arg
+    i <<- i + size
+    args
   }
 }
 
