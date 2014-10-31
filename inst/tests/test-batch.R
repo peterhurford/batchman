@@ -42,7 +42,7 @@ test_that('it can batch by two keys and include two nonbatched params', {
     w + x
   }
   batched_add <- batch(add_first_and_second_arg, c('w', 'x'),
-    splitting_strategy = 'complex', combination_strategy = c, size = 1, verbose = FALSE)
+    combination_strategy = c, size = 1, verbose = FALSE)
   o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9), c(10, 11, 12))
   expect_equal(c(10, 11, 12), record_last_arg)
   expect_equal(c(5, 7, 9), o)
@@ -55,7 +55,7 @@ test_that('it can batch by two keys and include a nonbatched param as the first 
     y + z
   }
   batched_add <- batch(add_second_and_third_arg, c('y', 'z'),
-    splitting_strategy = 'complex', combination_strategy = c, size = 1, verbose = FALSE)
+    combination_strategy = c, size = 1, verbose = FALSE)
   o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9))
   expect_equal(c(1, 2, 3), record_first_arg)
   expect_equal(c(11, 13, 15), o)
@@ -70,7 +70,7 @@ test_that('it can batch by two keys, surrounded by nonbatched params', {
     x + y
   }
   batched_add <- batch(add_middle_args, c('x', 'y'),
-    splitting_strategy = 'complex', combination_strategy = c, size = 1, verbose = FALSE)
+    combination_strategy = c, size = 1, verbose = FALSE)
   o <- batched_add(c(10, 11, 12), c(13, 14, 15), c(16, 17, 18), c(19, 20, 21))
   expect_equal(c(10, 11, 12), record_first_arg)
   expect_equal(c(19, 20, 21), record_last_arg)
@@ -79,14 +79,14 @@ test_that('it can batch by two keys, surrounded by nonbatched params', {
 
 test_that('it can batch by an existant key and a nonexistant key', {
   batched_identity <- batch(identity, c('x', 'y'),
-    splitting_strategy = 'complex', combination_strategy = paste0, size = 1, verbose = FALSE
+    combination_strategy = paste0, size = 1, verbose = FALSE
   )
   expect_equal('abc', batched_identity(c('a', 'b', 'c')))
 })
 
 test_that('it can batch by an existant key and a nonexistant key (the other way)', {
   batched_identity <- batch(identity, c('y', 'x'),
-    splitting_strategy = 'complex', combination_strategy = paste0, size = 1, verbose = FALSE
+    combination_strategy = paste0, size = 1, verbose = FALSE
   )
   expect_equal('def', batched_identity(c('d', 'e', 'f')))
 })
@@ -99,7 +99,7 @@ test_that('it can batch by either one or the other key provided', {
       paste('bananas!', paste(bananas, collapse=''))
   }
   batched_aob <- batch(apple_or_banana_fn, c('apples', 'bananas'),
-    splitting_strategy = 'complex', combination_strategy = c, size = 3, verbose = FALSE
+    combination_strategy = c, size = 3, verbose = FALSE
   )
   a <- batched_aob(apples = c(1, 2, 3, 4, 5))
   expect_equal(c('apples! 123', 'apples! 45'), a)
@@ -114,7 +114,7 @@ test_that('it can handle functions with splats', {
     if ('pears' %in% names(list(...))) return('pears!')
   }
   batched_fruit <- batch(fruit_fn, c('apples', 'bananas', 'pears'),
-    splitting_strategy = 'complex', combination_strategy = paste, size = 3, verbose = FALSE
+    combination_strategy = paste, size = 3, verbose = FALSE
   )
   expect_equal('apples! apples!', batched_fruit(apples = c(1,2,3,4,5)))
   expect_equal('bananas! bananas!', batched_fruit(bananas = c(1,2,3,4,5)))
@@ -127,7 +127,7 @@ test_that('it stores partial progress on error', {
   fn1 <- function() 1
   fncaller <- function(list_fn) list_fn[[1]]()
   print_ex <- batch(fncaller, 'list_fn',
-    splitting_strategy = 'complex', combination_strategy = function(x,y) unlist(c(x,y)),
+    combination_strategy = function(x,y) unlist(c(x,y)),
     size = 1, verbose = FALSE, trycatch = TRUE, stop = TRUE
   ) # Will error because identity doesn't have x arg
   expect_error(print_ex(c(fn1, fn1, fn1, fn1, identity)))  
@@ -137,7 +137,7 @@ test_that('it stores partial progress on error', {
 test_that('it must not evaluate unneeded arguments', {
   fn <- function(x, y) x
   batched_fn <- batch(fn, 'x',
-    splitting_strategy = 'complex', combination_strategy = c, size = 1, verbose = FALSE)
+    combination_strategy = c, size = 1, verbose = FALSE)
   expect_equal(1, batched_fn(1, identity()))  # If identity() were evaluated, it would error.
 })
 
@@ -145,30 +145,12 @@ test_that('it must be more efficient to batch than to execute an O(x^2) function
   # Simulate an O(x^2) function
   sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-11)
   batched_sleep_square <- batch(sleep_square, 'input',
-    splitting_strategy = 'simple', combination_strategy = c,
-    size = 1000, verbose = FALSE)
+    combination_strategy = c, size = 1000, verbose = FALSE)
 
   require(microbenchmark)
   speeds <- summary(microbenchmark(times = 10,
     sleep_square(seq(1:10^5)),
     batched_sleep_square(seq(1:10^5))
-  ))
-  expect_true(speeds$median[[2]] < speeds$median[[1]])
-})
-
-test_that('the simple splitting strategy is more efficient than the default strategy', {
-  # Simulate an O(x^2) function
-  sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-12)
-  bss_simple <- batch(sleep_square, 'input',
-    splitting_strategy = 'simple', combination_strategy = c,
-    size = 1000, verbose = FALSE)
-  bss_default <- batch(sleep_square, 'input', combination_strategy = c,
-    size = 1000, verbose = FALSE)
-
-  require(microbenchmark)
-  speeds <- summary(microbenchmark(times = 10,
-    bss_default(seq(1:10^5)),
-    bss_simple(seq(1:10^5))
   ))
   expect_true(speeds$median[[2]] < speeds$median[[1]])
 })

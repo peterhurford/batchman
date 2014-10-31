@@ -8,7 +8,7 @@
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
-batch <- function(batch_fn, keys, splitting_strategy = 'simple',
+batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
   splitting_strategy <- decide_strategy(splitting_strategy)
 
@@ -47,29 +47,7 @@ partial_progress <- local({
 #' @export
 progress <- function() batchman:::partial_progress$get()
 
-simple_strategy <- function(..., batch_fn, keys, size, verbose) {
-  if (length(keys) > 1) stop('Simple strategy only works for one key.')
-  args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
-  if (!identical(keys, names(args)[[2]]))
-    stop('Simple strategy only works when the key is the first arg.')
-  run_length <- eval(bquote(NROW(.(args[[2]]))), envir = parent.frame(2))
-  if (run_length > size & verbose)
-    cat('More than', size, 'inputs detected.  Batching...\n')
-  i <- 1
-  
-  second_arg <- quote(x[seq(y, z)])
-  function() {
-    if (i > run_length) return('batchman.is.done')
-    second_arg[[2]] <- args[[2]]
-    second_arg[[3]][[2]] <- i
-    second_arg[[3]][[3]] <- min(i + size - 1, run_length)
-    args[[2]] <- second_arg
-    i <<- i + size
-    args
-  }
-}
-
-complex_strategy <- function(..., batch_fn, keys, size, verbose) {
+default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   if(!any(names(args) %in% keys)) stop('Improper keys.')
   delete <- which(!keys %in% names(args))
@@ -94,37 +72,6 @@ complex_strategy <- function(..., batch_fn, keys, size, verbose) {
   }
 }
 
-default_strategy <- function(..., batch_fn, keys, size, verbose) {
-  args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
-  if(!any(names(args) %in% keys)) stop('Improper keys.')
-  delete <- which(!keys %in% names(args))
-  if (length(delete) > 0) keys <- keys[-delete]
-  where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args))
-  run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))))
-  if (run_length > size & verbose)
-    cat('More than', size, 'inputs detected.  Batching...\n')
-  i <- 1
-  function() {
-    if (i > run_length) return('batchman.is.done')
-    on.exit(i <<- i + size)
-    out <- list()
-    j <- 1
-    for (input in as.list(args[-1])) {
-      out[[j]] <- if (list(input) %in% as.list(args[where_the_inputs_at])) {
-        eval(input)[seq(i, min(i + size - 1, run_length))]
-      } else { input }
-      j <- j + 1
-    }
-    out
-  }
-}
-
-decide_strategy <- function(splitting_strategy) {
-  if(identical('complex', splitting_strategy)) batchman:::complex_strategy
-  else if (identical('simple', splitting_strategy)) batchman:::simple_strategy
-  else splitting_strategy
-}
-
 default_batch_error <- function(e) {
   if (stop) {
     if (verbose) cat('\nERROR... HALTING.\n')
@@ -137,3 +84,6 @@ default_batch_error <- function(e) {
   else warning('Some of the data failed to process because: ', e$message)
 }
 
+decide_strategy <- function(splitting_strategy) {
+  if (is.null(splitting_strategy)) batchman:::default_strategy else splitting_strategy
+}
