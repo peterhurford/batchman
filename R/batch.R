@@ -25,12 +25,12 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-      batches <- loop(batch_fn, next_batch, combination_strategy, verbose, trycatch)
+      loop(batch_fn, next_batch, combination_strategy, verbose, trycatch)
     }
 }
 
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
-    batches <- structure(list(), class = "no_batches")
+  batches <- structure(list(), class = "no_batches")
   run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
   new_call <- next_batch()
   while (!is(new_call, 'batchman.is.done')) {
@@ -67,7 +67,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   keys <- clean_keys(args, keys)
   args <- cache_functions(args, keys)
-  where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args))
+  where_the_inputs_at <- find_inputs(args, keys) 
   run_length <- eval(
     bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))),
     envir = parent.frame(2)
@@ -76,10 +76,17 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   generate_batch_maker(run_length, where_the_inputs_at, args, size)
 }
 
+find_inputs <- function(args, keys) {
+  if(identical(keys, '...')) seq(2, length(args))
+  else grep(paste0(keys, collapse='|'), names(args))
+}
+
 clean_keys <- function(args, keys) {
-  if(!any(names(args) %in% keys)) stop('Improper keys.')
-  delete <- which(!keys %in% names(args))
-  if (length(delete) > 0) keys <- keys[-delete]
+  if (!identical(keys, '...')) {
+    if(!any(names(args) %in% keys)) stop('Improper keys.')
+    delete <- which(!keys %in% names(args))
+    if (length(delete) > 0) keys <- keys[-delete]
+  }
   keys
 }
 

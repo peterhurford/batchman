@@ -120,6 +120,14 @@ test_that('it can handle functions with splats', {
   expect_equal('pears! pears!', batched_fruit(pears = c(1,2,3,4,5)))
 })
 
+test_that('it can handle functions with splats and no keys', {
+  splat_fn <- function(...) { list(...) }
+  batched_splat <- batch(splat_fn, '...', combination_strategy = c,
+    size = 1, verbose = FALSE)
+  o = batched_splat(c(1, 2, 3), c(5, 6, 7), c(8, 9, 0))
+  expect_equal(list(1, 5, 8, 2, 6, 9, 3, 7, 0), o)
+})
+
 test_that('it stores partial progress on error', {
   batchman:::partial_progress$clear()
   expect_equal(list(), batchman::progress())
