@@ -8,7 +8,7 @@
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether to stop if an error is raised.
 #' @export
-batch <- function(batch_fn, keys, splitting_strategy = NULL,
+batch <- function(batch_fn, keys, splitting_strategy = 'simple',
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
   splitting_strategy <- decide_strategy(splitting_strategy)
 
@@ -23,12 +23,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       )
 
       run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
-      new_call <- NULL
+      new_call <- next_batch()
       while (!identical(new_call, 'batchman.is.done')) {
-        new_call <- next_batch()
         if (isTRUE(verbose)) cat('.')
         batch <- eval(new_call, envir = run_env)
         batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
+        new_call <- next_batch()
       }
     })
     if (is(batches, "no_batches")) new_arguments else batches
