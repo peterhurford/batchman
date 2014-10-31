@@ -12,7 +12,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
   splitting_strategy <- decide_strategy(splitting_strategy)
   function(...) {
-    batches <- structure(list(), class = "no_batches")
+    batches <<- structure(list(), class = "no_batches")
     body_fn <- function(...) {
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
@@ -23,14 +23,15 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         if (isTRUE(verbose)) cat('.')
         batch <- eval(new_call, envir = run_env)
         batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
+        if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
         new_call <- next_batch()
       }
       if (is(batches, "no_batches")) new_arguments else batches
     }
     if (isTRUE(trycatch))
       tryCatch(
-        batches <- body_fn(...),
-        error = function(e) default_batch_error(e, batches)
+        body_fn(...),
+        error = function(e) default_batch_error(e, stop, verbose)
       )
     else body_fn(...)
   }
@@ -73,13 +74,11 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   }
 }
 
-default_batch_error <- function(e, batches) {
+default_batch_error <- function(e, stop, verbose) {
   if (stop) {
     if (verbose) cat('\nERROR... HALTING.\n')
-    if(exists('batches')) {
-      batchman:::partial_progress$set(batches)
-      if (verbose) cat('Partial progress saved to batchman::progress()\n')
-    }
+    if(exists('batches') && verbose)
+      cat('Partial progress saved to batchman::progress()\n')
     stop(e$message)
   }
   else warning('Some of the data failed to process because: ', e$message)
