@@ -12,29 +12,43 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
   splitting_strategy <- decide_strategy(splitting_strategy)
   function(...) {
-    batches <- structure(list(), class = "no_batches")
-    body_fn <- function(...) {
+    body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
+      combination_strategy, size, verbose, trycatch, stop)
+    run_the_batches(..., body_fn = body_fn, trycatch = trycatch,
+      stop = stop, verbose = verbose)
+  }
+}
+
+make_body_fn <- function(batch_fn, keys, splitting_strategy,
+  combination_strategy, size, verbose, trycatch, stop) {
+    function(...) {
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-      run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
-      new_call <- next_batch()
-      while (!is(new_call, 'batchman.is.done')) {
-        if (isTRUE(verbose)) cat('.')
-        batch <- eval(new_call, envir = run_env)
-        batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
-        if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
-        new_call <- next_batch()
-      }
-      if (is(batches, "no_batches")) new_arguments else batches
+      batches <- loop(batch_fn, next_batch, combination_strategy, verbose, trycatch)
     }
-    if (isTRUE(trycatch))
-      tryCatch(
-        body_fn(...),
-        error = function(e) default_batch_error(e, stop, verbose)
-      )
-    else body_fn(...)
+}
+
+loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
+    batches <- structure(list(), class = "no_batches")
+  run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
+  new_call <- next_batch()
+  while (!is(new_call, 'batchman.is.done')) {
+    if (isTRUE(verbose)) cat('.')
+    batch <- eval(new_call, envir = run_env)
+    batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
+    if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
+    new_call <- next_batch()
   }
+  if (!is(batches, "no_batches")) batches
+}
+
+run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
+  if (isTRUE(trycatch))
+    tryCatch(body_fn(...),
+      error = function(e) default_batch_error(e, stop, verbose)
+    )
+  else body_fn(...)
 }
 
 partial_progress <- local({
@@ -51,19 +65,39 @@ progress <- function() batchman:::partial_progress$get()
 
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
+  keys <- clean_keys(args, keys)
+  args <- cache_functions(args, keys)
+  where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args))
+  run_length <- eval(
+    bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))),
+    envir = parent.frame(2)
+  )
+  print_batching_message(run_length, size, verbose)
+  generate_batch_maker(run_length, where_the_inputs_at, args, size)
+}
+
+clean_keys <- function(args, keys) {
   if(!any(names(args) %in% keys)) stop('Improper keys.')
   delete <- which(!keys %in% names(args))
-  if (length(delete) > 0) kes <- keys[-delete]
-  where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args))
+  if (length(delete) > 0) keys <- keys[-delete]
+  keys
+}
+
+cache_functions <- function(args, keys) {
   for (key in keys) {
     if (is.call(args[[key]]))
-      args[[key]] <- eval(args[[key]], envir = parent.frame(3))
+      args[[key]] <- eval(args[[key]], envir = parent.frame(5))
   }
-  run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))), envir = parent.frame(2))
+  args
+}
+
+print_batching_message <- function(run_length, size, verbose) {
   if (run_length > size & verbose)
     cat('More than', size, 'inputs detected.  Batching...\n')
+}
+
+generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
   i <- 1
-  
   second_arg <- quote(x[seq(y, z)])
   function() {
     if (i > run_length) return(structure(list(), class = 'batchman.is.done'))

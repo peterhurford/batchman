@@ -2,8 +2,7 @@ context('batch')
 
 check_for_batch_length_of <- function(len) {
   batch_length <- 0
-  batch_check <- function(x)
-    if (batch_length == 0) batch_length <<- length(x)
+  batch_check <- function(x) { if (batch_length == 0) batch_length <<- length(x) }
   batch_check(seq(1:10))
   expect_equal(10, batch_length)
   batch_length <- 0
