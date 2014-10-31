@@ -10,7 +10,11 @@ batch(batch_fn, keys, splitting_strategy = NULL, combination_strategy,
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
 
-\item{splitting_strategy}{function. The strategy used to split up inputs.}
+\item{keys}{vector. The names of the keys within the function to batch.
+Can be '...' if one is batching a splat function with no keys.}
+
+\item{splitting_strategy}{function. The strategy used to split up inputs.
+Leave NULL to use the versatile default splitting strategy.}
 
 \item{combination_strategy}{function. The strategy used to recombine batches.}
 
@@ -18,9 +22,10 @@ batch(batch_fn, keys, splitting_strategy = NULL, combination_strategy,
 
 \item{verbose}{logical. Whether or not to announce progress by printing dots.}
 
-\item{stop}{logical. Whether to stop if an error is raised.}
+\item{trycatch}{logical. Whether to wrap the function in a tryCatch block.
+Can be used to store and retrieve partial progress on an error.}
 
-\item{...}{additional arguments to pass to \code{batch_fn}.}
+\item{stop}{logical. Whether trycatch should stop if an error is raised.}
 }
 \description{
 batch maps a function to a batched version of that function.

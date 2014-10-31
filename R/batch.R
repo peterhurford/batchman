@@ -1,12 +1,16 @@
 #' batch maps a function to a batched version of that function.
 #'
 #' @param batch_fn function. The method to batch over.
+#' @param keys vector. The names of the keys within the function to batch.
+#'   Can be '...' if one is batching a splat function with no keys.
 #' @param splitting_strategy function. The strategy used to split up inputs.
+#'   Leave NULL to use the versatile default splitting strategy.
 #' @param combination_strategy function. The strategy used to recombine batches.
-#' @param ... additional arguments to pass to \code{batch_fn}.
 #' @param size numeric. The size of the packets. Default 50.
 #' @param verbose logical. Whether or not to announce progress by printing dots.
-#' @param stop logical. Whether to stop if an error is raised.
+#' @param trycatch logical. Whether to wrap the function in a tryCatch block.
+#'   Can be used to store and retrieve partial progress on an error.
+#' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
