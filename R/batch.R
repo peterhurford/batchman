@@ -55,6 +55,10 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   delete <- which(!keys %in% names(args))
   if (length(delete) > 0) kes <- keys[-delete]
   where_the_inputs_at <- grep(paste0(keys, collapse='|'), names(args))
+  for (key in keys) {
+    if (is.call(args[[key]]))
+      args[[key]] <- eval(args[[key]], envir = parent.frame(3))
+  }
   run_length <- eval(bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))), envir = parent.frame(2))
   if (run_length > size & verbose)
     cat('More than', size, 'inputs detected.  Batching...\n')

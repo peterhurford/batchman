@@ -4,8 +4,8 @@
 \alias{batch}
 \title{batch maps a function to a batched version of that function.}
 \usage{
-batch(batch_fn, splitting_strategy = NULL, combination_strategy, size = 50,
-  verbose = TRUE, stop = TRUE)
+batch(batch_fn, keys, splitting_strategy = NULL, combination_strategy,
+  size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
