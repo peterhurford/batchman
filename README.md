@@ -36,7 +36,7 @@ devtools::install_github('peterhurford', 'batchman')
 * (If really inclined, you can pass a custom `splitting_strategy` to `batch`.  Not for the faint of heart.  The default splitting strategy should handle 99.9% of scenarios in which you use Batchman.)
 
 
-#### Combine Batches
+## Combine Batches
 
 If you have objects you want to combine, but don't know their class, you can combine them together with `combine` (as long as all items are the same class).  This allows for class-agnostic recombination, which is useful for batching, and is the default combination method for Batchman.
 
