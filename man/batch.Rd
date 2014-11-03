@@ -4,8 +4,9 @@
 \alias{batch}
 \title{batch maps a function to a batched version of that function.}
 \usage{
-batch(batch_fn, keys, splitting_strategy = NULL, combination_strategy,
-  size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE)
+batch(batch_fn, keys, splitting_strategy = NULL,
+  combination_strategy = batchman::combine, size = 50, verbose = TRUE,
+  trycatch = FALSE, stop = TRUE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
@@ -16,7 +17,8 @@ Can be '...' if one is batching a splat function with no keys.}
 \item{splitting_strategy}{function. The strategy used to split up inputs.
 Leave NULL to use the versatile default splitting strategy.}
 
-\item{combination_strategy}{function. The strategy used to recombine batches.}
+\item{combination_strategy}{function. The strategy used to recombine batches.
+Defaults to class-agnostic combination.}
 
 \item{size}{numeric. The size of the packets. Default 50.}
 

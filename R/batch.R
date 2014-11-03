@@ -6,6 +6,7 @@
 #' @param splitting_strategy function. The strategy used to split up inputs.
 #'   Leave NULL to use the versatile default splitting strategy.
 #' @param combination_strategy function. The strategy used to recombine batches.
+#'   Defaults to class-agnostic combination.
 #' @param size numeric. The size of the packets. Default 50.
 #' @param verbose logical. Whether or not to announce progress by printing dots.
 #' @param trycatch logical. Whether to wrap the function in a tryCatch block.
@@ -13,15 +14,16 @@
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy, size = 50, verbose = TRUE, trycatch = FALSE, stop = TRUE) {
-  if (isTRUE(stop)) trycatch <- TRUE
-  splitting_strategy <- decide_strategy(splitting_strategy)
-  function(...) {
-    body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
-      combination_strategy, size, verbose, trycatch, stop)
-    run_the_batches(..., body_fn = body_fn, trycatch = trycatch,
-      stop = stop, verbose = verbose)
-  }
+  combination_strategy = batchman::combine, size = 50, verbose = TRUE,
+  trycatch = FALSE, stop = TRUE) {
+    if (isTRUE(stop)) trycatch <- TRUE
+    splitting_strategy <- decide_strategy(splitting_strategy)
+    function(...) {
+      body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
+        combination_strategy, size, verbose, trycatch, stop)
+      run_the_batches(..., body_fn = body_fn, trycatch = trycatch,
+        stop = stop, verbose = verbose)
+    }
 }
 
 make_body_fn <- function(batch_fn, keys, splitting_strategy,
@@ -41,7 +43,8 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
   while (!is(new_call, 'batchman.is.done')) {
     if (isTRUE(verbose)) cat('.')
     batch <- eval(new_call, envir = run_env)
-    batches <- if (is(batches, "no_batches")) batch else combination_strategy(batches, batch)
+    batches <- if (is(batches, "no_batches")) batch
+      else combination_strategy(batches, batch)
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
     new_call <- next_batch()
   }
