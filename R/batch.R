@@ -37,18 +37,17 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 }
 
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
-  batches <- structure(list(), class = "no_batches")
   run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
   new_call <- next_batch()
-  while (!is(new_call, 'batchman.is.done')) {
+  while (!batchman:::is.done(new_call)) {
     if (isTRUE(verbose)) cat('.')
     batch <- eval(new_call, envir = run_env)
-    batches <- if (is(batches, "no_batches")) batch
+    batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
     new_call <- next_batch()
   }
-  if (!is(batches, "no_batches")) batches
+  if (!batchman:::is.no_batches(batches)) batches
 }
 
 run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
@@ -58,18 +57,6 @@ run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
     )
   else body_fn(...)
 }
-
-partial_progress <- local({
-  .cache <- list()
-  structure(list(
-    get = function() .cache,
-    clear = function() .cache <<- list(),
-    set = function(value) .cache <<- value
-  ))
-})
-
-#' @export
-progress <- function() batchman:::partial_progress$get()
 
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
