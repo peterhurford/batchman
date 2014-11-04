@@ -79,8 +79,7 @@ find_inputs <- function(args, keys) {
 clean_keys <- function(args, keys) {
   if (!identical(keys, '...')) {
     if(!any(names(args) %in% keys)) stop('Improper keys.')
-    delete <- which(!keys %in% names(args))
-    if (length(delete) > 0) keys <- keys[-delete]
+    keys <- keys[!keys %in% names(args)]
   }
   keys
 }
@@ -102,7 +101,7 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
   i <- 1
   second_arg <- quote(x[seq(y, z)])
   function() {
-    if (i > run_length) return(structure(list(), class = 'batchman.is.done'))
+    if (i > run_length) return(batchman:::done)
     for (j in where_the_inputs_at) {
       second_arg[[2]] <- args[[j]]
       second_arg[[3]][[2]] <- i

@@ -1,4 +1,5 @@
 batches <- structure(list(), class = 'no_batches')
+done <- structure(list(), class = 'batchman.is.done')
 
 #' A helper method to determine if batches doesn't contain batches.
 #' @param batches The object to see if it contains batches.
