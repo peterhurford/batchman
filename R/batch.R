@@ -77,9 +77,7 @@ find_inputs <- function(args, keys) {
 }
 
 clean_keys <- function(args, keys) {
-  if (!identical(keys, '...')) {
-    keys <- keys[keys %in% names(args)]
-  }
+  if (!identical(keys, '...')) keys <- keys[keys %in% names(args)]
   keys
 }
 
