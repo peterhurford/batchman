@@ -164,6 +164,13 @@ test_that('it returns NULL on a batch multiple NULLs', {
   expect_null(batched_identity(c(NULL, NULL, NULL)))
 })
 
+test_that('it returns NULL when batching a function that evaluates to NULL', {
+  nuller <- function(...) NULL
+  batched_nuller <- batch(nuller, keys = '...',
+    combination_strategy = c, size = 1, verbose = FALSE)
+  expect_null(batched_nuller(c(1, 2, 3)))
+})
+
 test_that('it ignores NULLs and still returns with mixed NULL / not NULL inputs', {
   expect_equal(c(1,2), batched_identity(c(NULL, 1, NULL, 2, NULL)))
 })
