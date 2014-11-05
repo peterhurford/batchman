@@ -4,6 +4,7 @@ record_last_arg <- list()
 record_first_arg <- list()
 batched_toupper <- batch(toupper, 'x',
   combination_strategy = paste, size = 1, verbose = FALSE)
+batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
 
 
 check_for_batch_length_of <- function(len) {
@@ -149,12 +150,13 @@ test_that('it must not evaluate unneeded arguments', {
   expect_equal(1, batched_fn(1, identity()))  # If identity() were evaluated, it would error.
 })
 
-
 test_that('it can batch an argument that is pre-defined', {
   pre_defined_vars <- c('hi', 'hello', 'how are you')
   o <- batched_toupper(pre_defined_vars)
   expect_equal('HI HELLO HOW ARE YOU', o)
 })
+
+test_that('it can batch NULL', { expect_null(batched_identity(NULL)) })
 
 test_that('it works with function calls', {
   fn2 <- function(x, y) x + y
@@ -167,8 +169,7 @@ test_that('it works with function calls', {
 test_that('it caches function calls', {
   sleep_time <- 0.01; length <- 10
   lengthy_function <- function(x) { Sys.sleep(sleep_time); x }
-  batched_fn <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
-  speed <- system.time(batched_fn(lengthy_function(seq(1:length))))
+  speed <- system.time(batched_identity(lengthy_function(seq(1:length))))
   expect_true(speed['elapsed'] < sleep_time * length)
 })
 

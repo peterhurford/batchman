@@ -42,6 +42,7 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
   run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
   parent.env(run_env) <- parent.frame(4)
+  if (is.null(next_batch)) return(NULL)
   new_call <- next_batch()
   while (!batchman:::is.done(new_call)) {
     if (isTRUE(verbose)) cat('.')
@@ -68,6 +69,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- cache_functions(args, keys)
   where_the_inputs_at <- find_inputs(args, keys) 
   what_to_eval <- args[[where_the_inputs_at[[1]]]]
+  if (is.null(what_to_eval)) return(NULL)
   where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
   run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
   print_batching_message(run_length, size, verbose)
