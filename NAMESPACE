@@ -3,4 +3,5 @@
 export(batch)
 export(combine)
 export(combine_by_list)
+export(is.batched_fn)
 export(progress)
