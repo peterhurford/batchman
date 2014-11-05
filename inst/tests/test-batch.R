@@ -1,5 +1,11 @@
 context('batch')
 
+record_last_arg <- list()
+record_first_arg <- list()
+batched_toupper <- batch(toupper, 'x',
+  combination_strategy = paste, size = 1, verbose = FALSE)
+
+
 check_for_batch_length_of <- function(len) {
   batch_length <- 0
   batch_check <- function(x) { if (batch_length == 0) batch_length <<- length(x) }
@@ -20,9 +26,13 @@ for (i in seq(1:5)) {
 }
 
 test_that('it can recombine', {
-  batched_toupper <- batch(toupper, 'x',
-    combination_strategy = paste, size = 1, verbose = FALSE)
   o <- batched_toupper(c('hi', 'hello', 'how are you'))
+  expect_equal('HI HELLO HOW ARE YOU', o)
+})
+
+test_that('it can batch an argument that is pre-defined', {
+  pre_defined_vars <- c('hi', 'hello', 'how are you')
+  o <- batched_toupper(pre_defined_vars)
   expect_equal('HI HELLO HOW ARE YOU', o)
 })
 
@@ -48,7 +58,6 @@ test_that('it can batch by two keys and include two nonbatched params', {
 })
 
 test_that('it can batch by two keys and include a nonbatched param as the first param', {
-  record_first_arg <- list()
   add_second_and_third_arg <- function(x, y, z) {
     record_first_arg <<- x
     y + z
@@ -61,8 +70,6 @@ test_that('it can batch by two keys and include a nonbatched param as the first 
 })
 
 test_that('it can batch by two keys, surrounded by nonbatched params', {
-  record_last_arg <- list()
-  record_first_arg <- list()
   add_middle_args <- function(w, x, y, z) {
     record_first_arg <<- w
     record_last_arg <<- z
