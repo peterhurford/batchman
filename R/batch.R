@@ -16,14 +16,17 @@
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, verbose = TRUE,
   trycatch = FALSE, stop = TRUE) {
+    if (is.batched_fn(batch_fn)) return(batch_fn)
     if (isTRUE(stop)) trycatch <- TRUE
     splitting_strategy <- decide_strategy(splitting_strategy)
-    function(...) {
+    batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
         combination_strategy, size, verbose, trycatch, stop)
       run_the_batches(..., body_fn = body_fn, trycatch = trycatch,
         stop = stop, verbose = verbose)
     }
+    attr(batched_fn, 'batched') <- TRUE
+    batched_fn
 }
 
 make_body_fn <- function(batch_fn, keys, splitting_strategy,
