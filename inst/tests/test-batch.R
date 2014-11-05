@@ -158,6 +158,10 @@ test_that('it can batch an argument that is pre-defined', {
 
 test_that('it can batch NULL', { expect_null(batched_identity(NULL)) })
 
+test_that('it can batch multiple NULLs', {
+  expect_null(batched_identity(c(NULL, NULL, NULL)))
+})
+
 test_that('it works with function calls', {
   fn2 <- function(x, y) x + y
   batched_fn <- batch(fn2, c('x', 'y'),

@@ -68,6 +68,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   keys <- clean_keys(args, keys)
   args <- cache_functions(args, keys)
   where_the_inputs_at <- find_inputs(args, keys) 
+  if (length(where_the_inputs_at) == 0) return(NULL)
   what_to_eval <- args[[where_the_inputs_at[[1]]]]
   if (is.null(what_to_eval)) return(NULL)
   where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
