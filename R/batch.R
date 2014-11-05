@@ -41,6 +41,7 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
   run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
+  parent.env(run_env) <- parent.frame(4)
   new_call <- next_batch()
   while (!batchman:::is.done(new_call)) {
     if (isTRUE(verbose)) cat('.')
@@ -66,10 +67,9 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   keys <- clean_keys(args, keys)
   args <- cache_functions(args, keys)
   where_the_inputs_at <- find_inputs(args, keys) 
-  run_length <- eval(
-    bquote(NROW(.(args[[where_the_inputs_at[[1]]]]))),
-    envir = parent.frame(2)
-  )
+  what_to_eval <- args[[where_the_inputs_at[[1]]]]
+  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
+  run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
   print_batching_message(run_length, size, verbose)
   generate_batch_maker(run_length, where_the_inputs_at, args, size)
 }
@@ -77,6 +77,14 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
 find_inputs <- function(args, keys) {
   if(identical(keys, '...')) seq(2, length(args))
   else grep(paste0(keys, collapse='|'), names(args))
+}
+
+find_in_stack <- function(what_to_eval) {
+  if (exists(
+    as.character(what_to_eval),
+    envir = parent.frame(2),
+    inherits = FALSE)
+  ) 2 else 4
 }
 
 clean_keys <- function(args, keys) {
