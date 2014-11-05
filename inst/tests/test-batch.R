@@ -156,9 +156,11 @@ test_that('it can batch an argument that is pre-defined', {
   expect_equal('HI HELLO HOW ARE YOU', o)
 })
 
-test_that('it can batch NULL', { expect_null(batched_identity(NULL)) })
+test_that('it returns NULL on a batch of NULL', {
+  expect_null(batched_identity(NULL))
+})
 
-test_that('it can batch multiple NULLs', {
+test_that('it returns NULL on a batch multiple NULLs', {
   expect_null(batched_identity(c(NULL, NULL, NULL)))
 })
 
