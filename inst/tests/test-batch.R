@@ -30,12 +30,6 @@ test_that('it can recombine', {
   expect_equal('HI HELLO HOW ARE YOU', o)
 })
 
-test_that('it can batch an argument that is pre-defined', {
-  pre_defined_vars <- c('hi', 'hello', 'how are you')
-  o <- batched_toupper(pre_defined_vars)
-  expect_equal('HI HELLO HOW ARE YOU', o)
-})
-
 test_that('it can batch twice by two keys', {
   reverse <- function(x, y) c(y, x)
   batched_reverse <- batch(reverse, c('x', 'y'),
@@ -155,22 +149,33 @@ test_that('it must not evaluate unneeded arguments', {
   expect_equal(1, batched_fn(1, identity()))  # If identity() were evaluated, it would error.
 })
 
+
+test_that('it can batch an argument that is pre-defined', {
+  pre_defined_vars <- c('hi', 'hello', 'how are you')
+  o <- batched_toupper(pre_defined_vars)
+  expect_equal('HI HELLO HOW ARE YOU', o)
+})
+
 test_that('it works with function calls', {
-  fn <- function(x) x
   fn2 <- function(x, y) x + y
   batched_fn <- batch(fn2, c('x', 'y'),
     combination_strategy = c, size = 1, verbose = FALSE)
-  o <- batched_fn(fn(seq(1:10)), fn(seq(1:10)))
+  o <- batched_fn(identity(seq(1:10)), identity(seq(1:10)))
   expect_equal(seq(2, 20, by = 2), o)
 })
 
 test_that('it caches function calls', {
   sleep_time <- 0.01; length <- 10
   lengthy_function <- function(x) { Sys.sleep(sleep_time); x }
-  fn <- function(x) x
-  batched_fn <- batch(fn, 'x', combination_strategy = c, size = 1, verbose = FALSE)
+  batched_fn <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
   speed <- system.time(batched_fn(lengthy_function(seq(1:length))))
   expect_true(speed['elapsed'] < sleep_time * length)
+})
+
+test_that('it can batch an argument that is a pre-defined function call', {
+  pre_defined_vars <- identity(c('hi', 'hello', 'how are you'))
+  o <- batched_toupper(pre_defined_vars)
+  expect_equal('HI HELLO HOW ARE YOU', o)
 })
 
 test_that('it must be more efficient to batch than to execute an O(x^2) function directly', {
