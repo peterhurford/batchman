@@ -152,8 +152,7 @@ test_that('it must not evaluate unneeded arguments', {
 
 test_that('it can batch an argument that is pre-defined', {
   pre_defined_vars <- c('hi', 'hello', 'how are you')
-  o <- batched_toupper(pre_defined_vars)
-  expect_equal('HI HELLO HOW ARE YOU', o)
+  expect_equal('HI HELLO HOW ARE YOU', batched_toupper(pre_defined_vars))
 })
 
 test_that('it returns NULL on a batch of NULL', {
