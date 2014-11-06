@@ -15,7 +15,7 @@
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, verbose = TRUE,
-  trycatch = FALSE, stop = TRUE) {
+  trycatch = FALSE, stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (isTRUE(stop)) trycatch <- TRUE
     splitting_strategy <- decide_strategy(splitting_strategy)
@@ -40,17 +40,19 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 }
 
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
-  run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
-  parent.env(run_env) <- parent.frame(4)
   if (is.null(next_batch)) return(NULL)
-  new_call <- next_batch()
+  batch_info <- next_batch()
+  new_call <- batch_info$new_call
+  keys <- batch_info$keys
+  run_env <- list2env(list(batch_fn = batch_fn))
+  parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]], batch_fn))
   while (!batchman:::is.done(new_call)) {
     if (isTRUE(verbose)) cat('.')
     batch <- eval(new_call, envir = run_env)
     batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
-    new_call <- next_batch()
+    new_call <- next_batch()$new_call
   }
   if (!batchman:::is.no_batches(batches)) batches
 }
@@ -66,12 +68,12 @@ run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   keys <- clean_keys(args, keys)
-  args <- cache_functions(args, keys)
+  args <- cache_functions(args, keys, batch_fn)
   where_the_inputs_at <- find_inputs(args, keys) 
   if (length(where_the_inputs_at) == 0) return(NULL)
   what_to_eval <- args[[where_the_inputs_at[[1]]]]
   if (is.null(what_to_eval)) return(NULL)
-  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
+  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval, batch_fn))
   run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
   print_batching_message(run_length, size, verbose)
   generate_batch_maker(run_length, where_the_inputs_at, args, size)
@@ -82,12 +84,16 @@ find_inputs <- function(args, keys) {
   else grep(paste0(keys, collapse='|'), names(args))
 }
 
-find_in_stack <- function(what_to_eval) {
-  if (exists(
-    as.character(what_to_eval),
-    envir = parent.frame(2),
-    inherits = FALSE)
-  ) 2 else 4
+find_in_stack <- function(what_to_eval, batch_fn) {
+  if (!is(what_to_eval, 'name')) return(4) #get_stack_depth(batch_fn))
+  stacks_to_search = c(4, 5)
+  for (stack in stacks_to_search) {
+    if (exists(
+      as.character(what_to_eval),
+      envir = parent.frame(stack+1),
+      inherits = FALSE)
+    ) return (stack)
+  }
 }
 
 clean_keys <- function(args, keys) {
@@ -95,10 +101,10 @@ clean_keys <- function(args, keys) {
   keys
 }
 
-cache_functions <- function(args, keys) {
+cache_functions <- function(args, keys, batch_fn) {
   for (key in keys) {
     if (is.call(args[[key]]))
-      args[[key]] <- eval(args[[key]], envir = parent.frame(5))
+      args[[key]] <- eval(args[[key]], envir = parent.frame(find_in_stack(key)+1))
   }
   args
 }
@@ -111,8 +117,9 @@ print_batching_message <- function(run_length, size, verbose) {
 generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
   i <- 1
   second_arg <- quote(x[seq(y, z)])
+  keys <- args[where_the_inputs_at]
   function() {
-    if (i > run_length) return(batchman:::done)
+    if (i > run_length) return(list('new_call' = batchman:::done))
     for (j in where_the_inputs_at) {
       second_arg[[2]] <- args[[j]]
       second_arg[[3]][[2]] <- i
@@ -120,7 +127,7 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
       args[[j]] <- second_arg
     }
     i <<- i + size
-    args
+    list('new_call' = args, 'keys' = keys)
   }
 }
 
