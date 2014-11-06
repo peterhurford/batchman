@@ -85,7 +85,7 @@ find_inputs <- function(args, keys) {
 
 find_in_stack <- function(what_to_eval) {
   if (!is(what_to_eval, 'name')) return(2)
-  stacks_to_search <- c(2, 4, 5)
+  stacks_to_search <- c(2, 4, 5, 6)
   for (stack in stacks_to_search) {
     if (exists(as.character(what_to_eval),
       envir = parent.frame(stack),
