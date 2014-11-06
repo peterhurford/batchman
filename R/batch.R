@@ -85,7 +85,7 @@ find_inputs <- function(args, keys) {
 }
 
 find_in_stack <- function(what_to_eval, batch_fn) {
-  if (!is(what_to_eval, 'name')) return(4) #get_stack_depth(batch_fn))
+  if (!is(what_to_eval, 'name')) return(4)
   stacks_to_search = c(4, 5)
   for (stack in stacks_to_search) {
     if (exists(

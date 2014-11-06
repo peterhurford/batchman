@@ -9,13 +9,6 @@ is.no_batches <- function(batches) is(batches, 'no_batches')
 #' @param call The batchman call object.
 is.done <- function(call) is(call, 'batchman.is.done')
 
-#' A helper method to assess the correct call stack depth for a batch call.
-#' @param fn function. The function to assess.
-get_stack_depth <- function(fn) 4 +
-  (isNamespace(environment(fn)) && !identical(baseenv(), environment(fn))
-  && !identical(getNamespace('base'), environment(fn)))
-
-
 #' A helper method to determine if a function is already batched.
 #' @param fn function. The function to test.
 #' @export
