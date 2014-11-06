@@ -10,6 +10,6 @@ is.no_batches <- function(batches) is(batches, 'no_batches')
 is.done <- function(call) is(call, 'batchman.is.done')
 
 #' A helper method to determine if a function is already batched.
-#' @param fn The function to test.
+#' @param fn function. The function to test.
 #' @export
 is.batched_fn <- function(fn) isTRUE(attr(fn, 'batched'))
