@@ -71,7 +71,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   if (length(where_the_inputs_at) == 0) return(NULL)
   what_to_eval <- args[[where_the_inputs_at[[1]]]]
   if (is.null(what_to_eval)) return(NULL)
-  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval)-1)
+  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
   run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
   print_batching_message(run_length, size, verbose)
   generate_batch_maker(run_length, where_the_inputs_at, args, size)
@@ -82,15 +82,12 @@ find_inputs <- function(args, keys) {
   else grep(paste0(keys, collapse='|'), names(args))
 }
 
-
 find_in_stack <- function(what_to_eval) {
-  if (!is(what_to_eval, 'name')) return(2)
-  stacks_to_search <- c(2, 4, 5)
-  for (stack in stacks_to_search) {
-    if (exists(as.character(what_to_eval),
-      envir = parent.frame(stack),
-      inherits = FALSE)) { return(stack) }
-  }
+  if (exists(
+    as.character(what_to_eval),
+    envir = parent.frame(2),
+    inherits = FALSE)
+  ) 2 else 4
 }
 
 clean_keys <- function(args, keys) {
