@@ -42,6 +42,7 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
   run_env <- list2env(list(batch_fn = batch_fn), parent = parent.frame())
   parent.env(run_env) <- parent.frame(4)
+  parent.env(parent.env(run_env)) <- parent.frame(5)
   if (is.null(next_batch)) return(NULL)
   new_call <- next_batch()
   while (!batchman:::is.done(new_call)) {
