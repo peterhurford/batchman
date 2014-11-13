@@ -196,6 +196,14 @@ test_that('it can batch an argument that is a pre-defined function call', {
   expect_equal('HI HELLO HOW ARE YOU', o)
 })
 
+test_that('it can batch a batched function', {
+  pre_defined_vars <- c(1, 2, 3)
+  nested_identity <- function(x) { batched_identity(x) }
+  batched_nested <- batch(nested_identity, 'x',
+    combination_strategy = c, size = 1, verbose = FALSE)
+  expect_equal(c(1, 2, 3), batched_nested(pre_defined_vars))
+})
+
 test_that('it must be more efficient to batch than to execute an O(x^2) function directly', {
   # Simulate an O(x^2) function
   sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-11)
