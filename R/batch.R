@@ -68,6 +68,7 @@ run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   keys <- clean_keys(args, keys)
+  if (length(keys) == 0) stop('Bad keys - no batched key matches keys passed.')
   args <- cache_functions(args, keys, batch_fn)
   where_the_inputs_at <- find_inputs(args, keys) 
   if (length(where_the_inputs_at) == 0) return(NULL)
