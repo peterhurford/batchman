@@ -45,7 +45,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
   new_call <- batch_info$new_call
   keys <- batch_info$keys
   run_env <- list2env(list(batch_fn = batch_fn))
-  parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]], batch_fn))
+  parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
   while (!batchman:::is.done(new_call)) {
     if (isTRUE(verbose)) cat('.')
     batch <- eval(new_call, envir = run_env)
@@ -68,12 +68,13 @@ run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
 default_strategy <- function(..., batch_fn, keys, size, verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   keys <- clean_keys(args, keys)
+  if (length(keys) == 0) stop('Bad keys - no batched key matches keys passed.')
   args <- cache_functions(args, keys, batch_fn)
   where_the_inputs_at <- find_inputs(args, keys) 
   if (length(where_the_inputs_at) == 0) return(NULL)
   what_to_eval <- args[[where_the_inputs_at[[1]]]]
   if (is.null(what_to_eval)) return(NULL)
-  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval, batch_fn))
+  where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
   run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
   print_batching_message(run_length, size, verbose)
   generate_batch_maker(run_length, where_the_inputs_at, args, size)
@@ -84,7 +85,7 @@ find_inputs <- function(args, keys) {
   else grep(paste0(keys, collapse='|'), names(args))
 }
 
-find_in_stack <- function(what_to_eval, batch_fn) {
+find_in_stack <- function(what_to_eval) {
   if (!is(what_to_eval, 'name')) return(4)
   stacks_to_search = c(4, 5)
   for (stack in stacks_to_search) {

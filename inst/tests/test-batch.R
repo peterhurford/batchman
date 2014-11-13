@@ -5,6 +5,7 @@ record_first_arg <- list()
 batched_toupper <- batch(toupper, 'x',
   combination_strategy = paste, size = 1, verbose = FALSE)
 batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
+reverse <- function(x, y) c(y, x)
 
 
 check_for_batch_length_of <- function(len) {
@@ -31,8 +32,13 @@ test_that('it can recombine', {
   expect_equal('HI HELLO HOW ARE YOU', o)
 })
 
+test_that('it errors with no matching keys', {
+  batched_reverse <- batch(reverse, 'w',
+    combination_strategy = c, size = 1, verbose = FALSE)
+  expect_error(batched_reverse(c(1, 2, 3), c(4, 5, 6)), 'Bad keys')
+})
+
 test_that('it can batch twice by two keys', {
-  reverse <- function(x, y) c(y, x)
   batched_reverse <- batch(reverse, c('x', 'y'),
     combination_strategy = c, size = 1, verbose = FALSE)
   o <- batched_reverse(c(1, 2, 3), c(4, 5, 6))
@@ -194,6 +200,14 @@ test_that('it can batch an argument that is a pre-defined function call', {
   pre_defined_vars <- identity(c('hi', 'hello', 'how are you'))
   o <- batched_toupper(pre_defined_vars)
   expect_equal('HI HELLO HOW ARE YOU', o)
+})
+
+test_that('it can batch a batched function', {
+  pre_defined_vars <- c(1, 2, 3)
+  nested_identity <- function(x) { batched_identity(x) }
+  batched_nested <- batch(nested_identity, 'x',
+    combination_strategy = c, size = 1, verbose = FALSE)
+  expect_equal(c(1, 2, 3), batched_nested(pre_defined_vars))
 })
 
 test_that('it must be more efficient to batch than to execute an O(x^2) function directly', {
