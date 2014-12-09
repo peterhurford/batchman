@@ -36,6 +36,19 @@ devtools::install_github('peterhurford', 'batchman')
 * (If really inclined, you can pass a custom `splitting_strategy` to `batch`.  Not for the faint of heart.  The default splitting strategy should handle 99.9% of scenarios in which you use Batchman.)
 
 
+## Using Batchman with Big Data
+
+Batchman is also very useful as a tool for handling big data in R, as your `combination_strategy` can involve something other than actually combining the two items.  For example, you might make a method like:
+
+```R
+big_data_combine <- function(first_batch, second_batch) {
+  store_in_database(second_batch)  
+}
+```
+
+Which will work to store each batch generated (except the first, which you'd have to make an exception for).
+
+
 ## Combine Batches
 
 If you have objects you want to combine, but don't know their class, you can combine them together with `combine` (as long as all items are the same class).  This allows for class-agnostic recombination, which is useful for batching, and is the default combination method for Batchman.
