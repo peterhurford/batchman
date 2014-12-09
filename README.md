@@ -46,7 +46,7 @@ big_data_combine <- function(first_batch, second_batch) {
 }
 ```
 
-Which will work to store each batch generated (except the first, which you'd have to make an exception for).
+Which will work to store each batch generated (except the first, which you'd have to make an exception for).  This way you don't have to keep a very large (too large) object in R memory, and can work on it in parts.
 
 
 ## Combine Batches
