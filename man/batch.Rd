@@ -6,7 +6,7 @@
 \usage{
 batch(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, verbose = TRUE,
-  trycatch = FALSE, stop = TRUE)
+  trycatch = FALSE, stop = FALSE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}

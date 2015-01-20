@@ -7,7 +7,7 @@
 is.batched_fn(fn)
 }
 \arguments{
-\item{fn}{The function to test.}
+\item{fn}{function. The function to test.}
 }
 \description{
 A helper method to determine if a function is already batched.

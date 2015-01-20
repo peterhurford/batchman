@@ -13,3 +13,13 @@ is.done <- function(call) is(call, 'batchman.is.done')
 #' @param fn function. The function to test.
 #' @export
 is.batched_fn <- function(fn) isTRUE(attr(fn, 'batched'))
+
+#' A helper method to get the pre-batched function of a batched function.
+#' @param fn function. The batched function to look for.
+#' @export
+get_before_fn <- function(fn) environment(fn)$batch_fn
+
+#' Print batched functions as they once were.
+#' @param fn function. The function to print.
+#' @export
+print.batched_function <- function(fn) print(list(before_fn = get_before_fn(fn), after_fn = body(fn)))
