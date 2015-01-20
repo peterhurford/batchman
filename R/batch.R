@@ -25,7 +25,6 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       run_the_batches(..., body_fn = body_fn, trycatch = trycatch,
         stop = stop, verbose = verbose)
     }
-    attr(batched_fn, 'batch_fn') <- batch_fn
     attr(batched_fn, 'batched') <- TRUE
     class(batched_fn) <- c('batched_function', 'function')
     batched_fn
