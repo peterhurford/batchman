@@ -36,11 +36,11 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-      loop(batch_fn, next_batch, combination_strategy, verbose, trycatch)
+      loop(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop)
     }
 }
 
-loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
+loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop) {
   if (is.null(next_batch)) return(NULL)
   batch_info <- next_batch()
   new_call <- batch_info$new_call
@@ -49,7 +49,12 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
   parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
   while (!batchman:::is.done(new_call)) {
     if (isTRUE(verbose)) cat('.')
-    batch <- eval(new_call, envir = run_env)
+    batch <- if (isTRUE(trycatch) && !stop) {
+      tryCatch(
+        eval(new_call, envir = run_env),
+        error = function(e) NA
+      )
+    } else eval(new_call, envir = run_env) 
     batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
@@ -61,7 +66,10 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
 run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
   if (isTRUE(trycatch))
     tryCatch(body_fn(...),
-      error = function(e) default_batch_error(e, stop, verbose)
+      error = function(e) {
+        default_batch_error(e, stop, verbose)
+        batchman::progress()
+      }
     )
   else body_fn(...)
 }
@@ -134,7 +142,7 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
 }
 
 default_batch_error <- function(e, stop, verbose) {
-  if (stop) {
+  if (isTRUE(stop)) {
     if (verbose) cat('\nERROR... HALTING.\n')
     if(exists('batches') && verbose)
       cat('Partial progress saved to batchman::progress()\n')

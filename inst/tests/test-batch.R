@@ -7,6 +7,16 @@ batched_toupper <- batch(toupper, 'x',
 batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
 reverse <- function(x, y) c(y, x)
 
+get_expect_error_fn <- function(trycatch, stop) {
+  batchman:::partial_progress$clear()
+  expect_equal(list(), batchman::progress())
+  fncaller <- function(list_fn) list_fn[[1]]()
+  batch(fncaller, 'list_fn',
+    combination_strategy = function(x,y) unlist(c(x,y)),
+    size = 1, verbose = FALSE, trycatch = trycatch, stop = stop
+  )
+}
+
 
 check_for_batch_length_of <- function(len) {
   batch_length <- 0
@@ -136,19 +146,6 @@ test_that('it can handle functions with splats and no keys', {
   expect_equal(list(1, 5, 8, 2, 6, 9, 3, 7, 0), o)
 })
 
-test_that('it stores partial progress on error', {
-  batchman:::partial_progress$clear()
-  expect_equal(list(), batchman::progress())
-  fn1 <- function() 1
-  fncaller <- function(list_fn) list_fn[[1]]()
-  print_ex <- batch(fncaller, 'list_fn',
-    combination_strategy = function(x,y) unlist(c(x,y)),
-    size = 1, verbose = FALSE, trycatch = TRUE, stop = TRUE
-  ) # Will error because identity doesn't have x arg
-  expect_error(print_ex(c(fn1, fn1, fn1, fn1, identity)))  
-  expect_equal(c(1, 1, 1, 1), batchman::progress())
-})
-
 test_that('it must not evaluate unneeded arguments', {
   fn <- function(x, y) x
   batched_fn <- batch(fn, 'x',
@@ -221,4 +218,23 @@ test_that('it must be more efficient to batch than to execute an O(x^2) function
     batched_sleep_square(seq(1:10^5))
   ))
   expect_true(speeds$median[[2]] < speeds$median[[1]])
+})
+
+test_that('it keeps processing with an error if trycatch is TRUE and stop is FALSE', {
+  fn1 <- function() 1
+  b_fn <- get_expect_error_fn(trycatch = TRUE, stop = FALSE)
+  expect_equal(c(1, 1, 1, 1, NA, 1), b_fn(c(fn1, fn1, fn1, fn1, identity, fn1)))
+})
+
+test_that('it stops with an error if trycatch is TRUE and stop is TRUE', {
+  fn1 <- function() 1
+  b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
+  expect_error(b_fn(c(fn1, fn1, fn1, fn1, identity)))
+})
+
+test_that('it stores partial progress on error', {
+  fn1 <- function() 1
+  b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
+  expect_error(b_fn(c(fn1, fn1, fn1, fn1, identity)))
+  expect_equal(c(1, 1, 1, 1), batchman::progress())
 })
