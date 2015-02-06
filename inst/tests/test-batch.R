@@ -7,17 +7,6 @@ batched_toupper <- batch(toupper, 'x',
 batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
 reverse <- function(x, y) c(y, x)
 
-get_expect_error_fn <- function(trycatch, stop) {
-  batchman:::partial_progress$clear()
-  expect_equal(list(), batchman::progress())
-  fncaller <- function(list_fn) list_fn[[1]]()
-  batch(fncaller, 'list_fn',
-    combination_strategy = function(x,y) unlist(c(x,y)),
-    size = 1, verbose = FALSE, trycatch = trycatch, stop = stop
-  )
-}
-
-
 check_for_batch_length_of <- function(len) {
   batch_length <- 0
   batch_check <- function(x) { if (batch_length == 0) batch_length <<- length(x) }
@@ -221,20 +210,23 @@ test_that('it must be more efficient to batch than to execute an O(x^2) function
 })
 
 test_that('it keeps processing with an error if trycatch is TRUE and stop is FALSE', {
-  fn1 <- function() 1
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = FALSE)
-  expect_equal(c(1, 1, 1, 1, NA, 1), b_fn(c(fn1, fn1, fn1, fn1, identity, fn1)))
+  rbomb$reset()
+  fn1 <- function() 1
+  expect_equal(c(1, 1, 1, NA, 1), b_fn(c(fn1, fn1, fn1, rbomb$detonate, fn1)))
 })
 
 test_that('it stops with an error if trycatch is TRUE and stop is TRUE', {
   fn1 <- function() 1
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
-  expect_error(b_fn(c(fn1, fn1, fn1, fn1, identity)))
+  rbomb$reset()
+  expect_error(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)))
 })
 
 test_that('it stores partial progress on error', {
   fn1 <- function() 1
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
-  expect_error(b_fn(c(fn1, fn1, fn1, fn1, identity)))
+  rbomb$reset()
+  expect_error(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)))
   expect_equal(c(1, 1, 1, 1), batchman::progress())
 })

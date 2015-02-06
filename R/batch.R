@@ -17,7 +17,9 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, verbose = TRUE,
   trycatch = FALSE, stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
+    if (missing(keys)) stop('Keys must be defined.')
     if (isTRUE(stop)) trycatch <- TRUE
+    batchman:::partial_progress$clear()
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
