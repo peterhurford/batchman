@@ -18,8 +18,8 @@ robust_batch <- function(batched_fn, ..., batchman.retries = 3) {
   for (try in seq(batchman.retries)) {
     run <- do.call(robust_batched_fn, remaining_args)
     remaining_args <- list(unlist(remaining_args)[is.na(run)])
-    if (length(unlist(remaining_args)) == 0) break
     if (try == 1) output <- run else output[is.na(output)] <- run
+    if (length(unlist(remaining_args)) == 0) break
   }
   output
 }
