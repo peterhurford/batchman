@@ -223,10 +223,3 @@ test_that('it stops with an error if trycatch is TRUE and stop is TRUE', {
   expect_error(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)))
 })
 
-test_that('it stores partial progress on error', {
-  fn1 <- function() 1
-  b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
-  rbomb$reset()
-  expect_error(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)))
-  expect_equal(c(1, 1, 1, 1), batchman::progress())
-})

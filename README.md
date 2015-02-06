@@ -1,5 +1,7 @@
 ![Batchman](http://i.imgur.com/63jNVwY.png)
 
+
+
 ## Batchman
 **Batchman** is a wrapper for R methods to run them in arbitrary batches.
 
@@ -17,6 +19,7 @@ batched_method(dataframe_with_lots_of_rows)
 ```
 
 
+
 ## Installation
 
 This package is not yet available from CRAN. To install the latest development builds directly from GitHub, run this instead:
@@ -27,18 +30,24 @@ devtools::install_github('peterhurford', 'batchman')
 ```
 
 
-## More Options
 
-* Pass `trycatch = TRUE` to `batch` to run Batchman in a tryCatch block.  If this is done, batchman will stop upon an error, but store all the progress so far, which you can retrieve with `batchman::progress()`.
+## Using Batchman with Error-Prone Sources
 
-* Pass `stop = FALSE` to `batch` to have Batchman keep going when an error occurs, aborting any failed blocks.
+Sometimes you might be batching functions that can be error-prone, like an API call.  When initializing the batching via the `batch` function, choose to pass `trycatch = TRUE` to `batch` to run Batchman in a `tryCatch` block.  If this is done, batchman will stop upon an error, but store all the progress so far, which you can retrieve with `batchman::progress()`.
 
-* (If really inclined, you can pass a custom `splitting_strategy` to `batch`.  Not for the faint of heart.  The default splitting strategy should handle 99.9% of scenarios in which you use Batchman.)
+You can pass both `trycatch = TRUE` and `stop = FALSE` to `batch`, and Batchman will keep going even when encountering an error.  Blocks that result in an error will be converted to `NA`.
+
+-
+
+Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use `robust_batch`.  `robust_batch` will run Batchman all the way through, and then attempt to re-run on only the `NA`s (which result from errors).
+
+To do this, call `robust_batch(batch_fn, ...)` where `batched_fn` is the function that you want to use after applying `batch` to it, and `...` are the arguments you wanted to pass to `batched_fn`.
+
 
 
 ## Using Batchman with Big Data
 
-Batchman is also very useful as a tool for handling big data in R, as your `combination_strategy` can involve something other than actually combining the two items.  For example, you might make a method like:
+Batchman could be a useful tool for handling big data in R.  Since batchman allows for a custom `combination_strategy`, you could do something other than combining the items in R memory (which may not be possible with the size of your data).  For example, you might make a method like:
 
 ```R
 big_data_combine <- function(first_batch, second_batch) {
@@ -46,7 +55,10 @@ big_data_combine <- function(first_batch, second_batch) {
 }
 ```
 
-Which will work to store each batch generated (except the first, which you'd have to make an exception for).  This way you don't have to keep a very large (too large) object in R memory, and can work on it in parts.
+Which will work to store each batch generated (except the first, which you'd have to make an exception for).
+
+You then can call batchman using `big_data_combine` as the `combination_strategy`.
+
 
 
 ## Combine Batches

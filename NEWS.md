@@ -1,4 +1,5 @@
 ## v0.3.0
+* A new method, `robust_batch`, has been added that can attempt batching with automatic error-handling.  Call `robust_batch(batched_fn, ...)` where `batched_fn` is the function that you want to use after applying `batch` to it, and `...` are the arguments you wanted to pass to `batched_fn`.
 * `stop = FALSE` now works as originally intended to keep going with batch processing even if an error occurs midstream.  Batches that result in an error simply return NA instead.
 
 
