@@ -20,7 +20,7 @@ combine_by_list <- function(combination_list) {
 
   first <- combination_list[[1]]
   fn <- if (is.character(first) & length(first) == 1) paste0                   # String
-  else if (class(first) %in% c('character', 'numeric', 'list', 'logical')) c   # Vector, List
+  else if (class(first) %in% c('character', 'numeric', 'list', 'logical', 'integer')) c   # Vector, List
   else if (is.data.frame(first)) plyr::rbind.fill                              # Data frame
   else if (is.matrix(first)) merge                                             # Matrix
   else stop('Class for combine not recognized.')

@@ -45,10 +45,17 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
   batch_info <- next_batch()
   new_call <- batch_info$new_call
   keys <- batch_info$keys
+  num_batches <- batch_info$num_batches
   run_env <- list2env(list(batch_fn = batch_fn))
   parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
+  p <- if (isTRUE(verbose) && require(R6))
+    progress_estimated(num_batches, min_time = 3)
+  else
+    NULL
   while (!batchman:::is.done(new_call)) {
-    if (isTRUE(verbose)) cat('.')
+    if (isTRUE(verbose)) {
+      if (!is.null(p)) p$tick()$print() else cat('.')
+    }
     batch <- eval(new_call, envir = run_env)
     batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
@@ -129,7 +136,7 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
       args[[j]] <- second_arg
     }
     i <<- i + size
-    list('new_call' = args, 'keys' = keys)
+    list('new_call' = args, 'keys' = keys, 'num_batches' = ceiling(run_length / size))
   }
 }
 
