@@ -1,3 +1,6 @@
+## v0.2.2
+* Incorporates the progress bar from dplyr <https://github.com/hadley/dplyr/blob/master/R/progress.R>
+
 ## v0.2.1
 * The way of getting the pre-batched function has changed from looking at the `attr` of the batched function to using `get_before_fn(batched_fn)`, which instead relies on looking at the environment of `batched_fn` instead of the attributes.
 
