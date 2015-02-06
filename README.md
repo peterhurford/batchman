@@ -43,6 +43,8 @@ Lastly, rather than having to constantly re-run and paste together the batch fun
 
 To do this, call `robust_batch(batch_fn, ...)` where `batched_fn` is the function that you want to use after applying `batch` to it, and `...` are the arguments you wanted to pass to `batched_fn`.
 
+The default amount of max retries is 3, but you can change th is by passing `batchman.retries`.
+
 
 
 ## Using Batchman with Big Data
