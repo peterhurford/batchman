@@ -4,7 +4,7 @@
 \alias{robust_batch}
 \title{robust_batch re-runs the batch function to be highly resilient to errors.}
 \usage{
-robust_batch(batched_fn, ..., batchman.retries = 3)
+robust_batch(batched_fn, ..., verbose = TRUE, batchman.retries = 3)
 }
 \arguments{
 \item{batched_fn}{function.  The batched function to re-run more robustly.}

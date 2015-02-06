@@ -5,7 +5,8 @@ test_that('Robust batch can batch an R Bomb without erroring.', {
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
   rbomb$reset()
   expect_equal(
-    robust_batch(b_fn, c(fn1, fn1, fn1, fn1, rbomb$detonate)),
+    robust_batch(b_fn, c(fn1, fn1, fn1, fn1, rbomb$detonate), verbose = FALSE),
     c(1, 1, 1, 1, 1)
   )
 })
+#TODO: Batch multiple, etc.
