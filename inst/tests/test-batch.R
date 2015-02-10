@@ -2,10 +2,6 @@ context('batch')
 
 record_last_arg <- list()
 record_first_arg <- list()
-batched_toupper <- batch(toupper, 'x',
-  combination_strategy = paste, size = 1, verbose = FALSE)
-batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
-reverse <- function(x, y) c(y, x)
 
 check_for_batch_length_of <- function(len) {
   batch_length <- 0
@@ -212,12 +208,10 @@ test_that('it must be more efficient to batch than to execute an O(x^2) function
 test_that('it keeps processing with an error if trycatch is TRUE and stop is FALSE', {
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = FALSE)
   rbomb$reset()
-  fn1 <- function() 1
   expect_equal(c(1, 1, 1, NA, 1), b_fn(c(fn1, fn1, fn1, rbomb$detonate, fn1)))
 })
 
 test_that('it stops with an error if trycatch is TRUE and stop is TRUE', {
-  fn1 <- function() 1
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
   rbomb$reset()
   expect_error(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)))

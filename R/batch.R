@@ -16,10 +16,11 @@
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, verbose = TRUE,
   trycatch = FALSE, stop = FALSE) {
-    if (is.batched_fn(batch_fn)) return(batch_fn)
+    #if (batchman::is.batched_fn(batch_fn)) return(batch_fn)
+    #TODO: How did this start breaking?
     if (missing(keys)) stop('Keys must be defined.')
     if (isTRUE(stop)) trycatch <- TRUE
-    batchman:::partial_progress$clear()
+    if (isTRUE(trycatch)) batchman:::partial_progress$clear()
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
@@ -157,7 +158,10 @@ default_batch_error <- function(e, stop, verbose) {
       cat('Partial progress saved to batchman::progress()\n')
     stop(e$message)
   }
-  else warning('Some of the data failed to process because: ', e$message)
+  else {
+    if (grepl('Bad keys - no batched key', e$message)) stop(e$message)
+    warning('Some of the data failed to process because: ', e$message)
+  }
 }
 
 decide_strategy <- function(splitting_strategy) {

@@ -16,9 +16,19 @@ rbomb <- local({
   ))
 })
 
+batched_toupper <- batch(toupper, 'x',
+  combination_strategy = paste, size = 1, verbose = FALSE)
+
+batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
+
+reverse <- function(x, y) c(y, x)
+
+fncaller <- function(list_fn) list_fn[[1]]()
+
+fn1 <- function() 1
+
 get_expect_error_fn <- function(trycatch, stop) {
   batchman:::partial_progress$clear()
-  fncaller <- function(list_fn) list_fn[[1]]()
   batch(fncaller, 'list_fn',
     combination_strategy = function(x,y) unlist(c(x,y)),
     size = 1, verbose = FALSE, trycatch = trycatch, stop = stop
