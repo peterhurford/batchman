@@ -2,6 +2,9 @@
 * A new method, `robust_batch`, has been added that can attempt batching with automatic error-handling.  Call `robust_batch(batched_fn, ...)` where `batched_fn` is the function that you want to use after applying `batch` to it, and `...` are the arguments you wanted to pass to `batched_fn`.  The default amount of max retries is 3, but you can change this by passing `batchman.retries`.
 * `stop = FALSE` now works as originally intended to keep going with batch processing even if an error occurs midstream.  Batches that result in an error simply return NA instead.
 
+## v0.2.2.1
+* Hotfixes a bug with the progress bar.
+
 ## v0.2.2
 * Incorporates the progress bar from dplyr <https://github.com/hadley/dplyr/blob/master/R/progress.R>
 
