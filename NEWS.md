@@ -1,3 +1,6 @@
+## v0.2.2.1
+* Hotfixes a bug with the progress bar.
+
 ## v0.2.2
 * Incorporates the progress bar from dplyr <https://github.com/hadley/dplyr/blob/master/R/progress.R>
 
