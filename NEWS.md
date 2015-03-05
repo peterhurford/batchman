@@ -1,3 +1,6 @@
+## v0.2.3
+* You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages.  This is potentially useful for tests where digging into batchman to set `verbose = FALSE` is annoying.  Keep in mind that this still won't affect batched functions after they are generated.
+
 ## v0.2.2.1
 * Hotfixes a bug with the progress bar.
 

@@ -18,6 +18,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   trycatch = FALSE, stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (isTRUE(stop)) trycatch <- TRUE
+    if (identical(getOption('batchman.verbose'), FALSE)) verbose <- FALSE
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
