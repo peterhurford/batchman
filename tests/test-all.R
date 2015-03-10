@@ -1,3 +1,4 @@
 library(testthat)
 library(testthatsomemore)
-test_package('batchman')
+library(batchman)
+test_check("batchman")
