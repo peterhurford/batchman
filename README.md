@@ -1,6 +1,7 @@
-![Batchman](http://i.imgur.com/63jNVwY.png)
+![Batchman](http://i.imgur.com/63jNVwY.png) 
 
-## Batchman
+## Batchman [![Build Status](https://travis-ci.org/peterhurford/batchman.svg?branch=master)](https://travis-ci.org/peterhurford/batchman?branch=master) [![Coverage Status](https://coveralls.io/repos/peterhurford/batchman/badge.png)](https://coveralls.io/r/peterhurford/batchman)
+
 **Batchman** is a wrapper for R methods to run them in arbitrary batches.
 
 Some methods crash when running on large inputs.  Batchman helps prevent those crashes, and helps increase speed where batching is useful.
