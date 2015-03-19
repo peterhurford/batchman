@@ -120,7 +120,7 @@ cache_functions <- function(args, keys, batch_fn) {
 }
 
 print_batching_message <- function(run_length, size, verbose) {
-  if (run_length > size & verbose)
+  if (run_length > size && verbose_set(verbose))
     cat('More than', size, 'inputs detected.  Batching...\n')
 }
 
