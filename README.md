@@ -36,7 +36,7 @@ devtools::install_github('peterhurford', 'batchman')
 
 * (If really inclined, you can pass a custom `splitting_strategy` to `batch`.  Not for the faint of heart.  The default splitting strategy should handle 99.9% of scenarios in which you use Batchman.)
 
-* You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages.  This is potentially useful for tests where digging into batchman to set `verbose = FALSE` is annoying.  Keep in mind that this still won't affect batched functions after they are generated.
+* You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set `verbose = FALSE` is annoying.
 
 
 ## Using Batchman with Big Data
