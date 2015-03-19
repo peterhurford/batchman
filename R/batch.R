@@ -18,7 +18,6 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   trycatch = FALSE, stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (isTRUE(stop)) trycatch <- TRUE
-    if (identical(getOption('batchman.verbose'), FALSE)) verbose <- FALSE
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
@@ -42,6 +41,7 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 }
 
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
+  verbose <- verbose_set(verbose)
   if (is.null(next_batch)) return(NULL)
   batch_info <- next_batch()
   new_call <- batch_info$new_call
@@ -153,4 +153,8 @@ default_batch_error <- function(e, stop, verbose) {
 
 decide_strategy <- function(splitting_strategy) {
   if (is.null(splitting_strategy)) batchman:::default_strategy else splitting_strategy
+}
+
+verbose_set <- function(verbose) {
+  !identical(getOption('batchman.verbose'), FALSE) && verbose
 }
