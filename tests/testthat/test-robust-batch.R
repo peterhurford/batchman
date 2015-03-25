@@ -64,6 +64,3 @@ test_that('it can work with a splat', {
   o <- robust_batch(batched_fn, list(fn1), list(fn1), list(rbomb$detonate), verbose = FALSE)
   expect_equal(o, list(1, 1, 1))
 })
-
-#TODO: Batch multiple, etc.
-#TODO: Robust batch with different classes.
