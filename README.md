@@ -1,8 +1,7 @@
-![Batchman](http://i.imgur.com/63jNVwY.png)
+![Batchman](http://i.imgur.com/63jNVwY.png) 
 
+## Batchman [![Build Status](https://travis-ci.org/peterhurford/batchman.svg?branch=master)](https://travis-ci.org/peterhurford/batchman?branch=master) [![Coverage Status](https://coveralls.io/repos/peterhurford/batchman/badge.png)](https://coveralls.io/r/peterhurford/batchman)
 
-
-## Batchman
 **Batchman** is a wrapper for R methods to run them in arbitrary batches.
 
 Some methods crash when running on large inputs.  Batchman helps prevent those crashes, and helps increase speed where batching is useful.
@@ -45,6 +44,8 @@ To do this, call `robust_batch(batch_fn, ...)` where `batched_fn` is the functio
 
 The default amount of max retries is 3, but you can change th is by passing `batchman.retries`.
 
+
+* You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set `verbose = FALSE` is annoying.
 
 
 ## Using Batchman with Big Data

@@ -44,6 +44,7 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
 }
 
 loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop) {
+  verbose <- verbose_set(verbose)
   if (is.null(next_batch)) return(NULL)
   batch_info <- next_batch()
   new_call <- batch_info$new_call
@@ -59,7 +60,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, 
     if (isTRUE(verbose)) {
       if (!is.null(p)) p$tick()$print() else cat('.')
     }
-    batch <- if (isTRUE(trycatch) && !stop) {
+    batch <- if (isTRUE(trycatch) && identical(stop, FALSE)) {
       tryCatch(
         eval(new_call, envir = run_env),
         error = function(e) NA
@@ -130,7 +131,7 @@ cache_functions <- function(args, keys, batch_fn) {
 }
 
 print_batching_message <- function(run_length, size, verbose) {
-  if (run_length > size & verbose)
+  if (run_length > size && verbose_set(verbose))
     cat('More than', size, 'inputs detected.  Batching...\n')
 }
 
@@ -166,4 +167,8 @@ default_batch_error <- function(e, stop, verbose) {
 
 decide_strategy <- function(splitting_strategy) {
   if (is.null(splitting_strategy)) batchman:::default_strategy else splitting_strategy
+}
+
+verbose_set <- function(verbose) {
+  !identical(getOption('batchman.verbose'), FALSE) && isTRUE(verbose)
 }
