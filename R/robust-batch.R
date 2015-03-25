@@ -10,7 +10,7 @@ robust_batch <- function(batched_fn, ..., verbose = TRUE, batchman.retries = 3) 
     environment(batched_fn)$splitting_strategy,
     environment(batched_fn)$combination_strategy,
     environment(batched_fn)$size,
-    environment(batched_fn)$verbose,
+    verbose,
     trycatch = TRUE,
     stop = FALSE
   )
@@ -21,8 +21,15 @@ robust_batch <- function(batched_fn, ..., verbose = TRUE, batchman.retries = 3) 
       cat(paste0(length(remaining_args[[1]]), ' remaining...\n'))
     }
     run <- do.call(robust_batched_fn, remaining_args)
+    if (length(run) < length(remaining_args)) {
+      length(run) <- length(remaining_args)
+    }
     remaining_args <- lapply(remaining_args, function(x) x[is.na(run)])
-    if (try == 1) output <- run else output[is.na(output)] <- run
+    if (try == 1) { output <- run }
+    else {
+      if (length(run) > sum(is.na(output))) { length(run) <- sum(is.na(output)) }
+      output[is.na(output)] <- run
+    }
     if (length(unlist(remaining_args)) == 0) break
   }
   output

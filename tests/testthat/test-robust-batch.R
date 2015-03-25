@@ -9,7 +9,7 @@ test_that('Robust batch can batch an R Bomb without erroring.', {
   )
 })
 
-test_that('It produces the same output as a regular bathc would', {
+test_that('It produces the same output as a regular batch would', {
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
   rbomb$reset()
   expect_equal(
@@ -32,9 +32,13 @@ test_that('it works with two keys', {
   batchman:::partial_progress$clear()
   rbomb$reset()
   double_fn_caller <- function(x, y) { x[[1]](); y[[1]](); }
-  batched_fn <- batch(double_fn_caller, c('x', 'y'),
+  batched_fn <- batch(
+    double_fn_caller,
+    c('x', 'y'),
     combination_strategy = function(x,y) unlist(c(x,y)),
-    size = 1, verbose = FALSE)
+    size = 1,
+    verbose = FALSE
+  )
   o <- robust_batch(
     batched_fn,
     c(fn1, rbomb$detonate, fn1),
@@ -47,13 +51,18 @@ test_that('it works with two keys', {
 test_that('it can work with a splat', {
   batchman:::partial_progress$clear()
   rbomb$reset()
-  splat_caller <- function(...)
+  splat_caller <- function(...) {
     lapply(list(...), function(l) do.call(l[[1]], list()))
-  batched_fn <- batch(splat_caller, '...',
-    combination_strategy = function(x,y) unlist(c(x,y)),
-    size = 1, verbose = FALSE)
-  o <- robust_batch(batched_fn, list(fn1, fn1), list(rbomb$detonate, fn1), verbose = FALSE)
-  expect_equal(o, c(1, 1, 1, 1))
+  }
+  batched_fn <- batch(
+    splat_caller,
+    '...',
+    combination_strategy = c,
+    size = 1,
+    verbose = FALSE
+  )
+  o <- robust_batch(batched_fn, list(fn1), list(fn1), list(rbomb$detonate), verbose = FALSE)
+  expect_equal(o, list(1, 1, 1))
 })
 
 #TODO: Batch multiple, etc.
