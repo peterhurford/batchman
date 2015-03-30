@@ -1,5 +1,11 @@
 context('batch')
 
+batched_toupper <- batch(toupper, 'x',
+  combination_strategy = paste, size = 1, verbose = FALSE)
+
+batched_identity <- batch(identity, 'x',
+   combination_strategy = c, size = 1, verbose = FALSE)
+
 record_last_arg <- list()
 record_first_arg <- list()
 
@@ -217,3 +223,6 @@ test_that('it stops with an error if trycatch is TRUE and stop is TRUE', {
   expect_error(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)))
 })
 
+test_that('it does not batch a bached function', {
+  expect_identical(get_before_fn(batch(batch(identity, 'x'), 'x')), identity)
+})

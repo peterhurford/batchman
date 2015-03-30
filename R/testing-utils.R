@@ -1,5 +1,3 @@
-# This is the R Bomb, a weird construct needed for tests.
-# It mimics a process that doesn't work the first time, but works the second time.
 rbomb <- local({
   .defused <- FALSE
   structure(list(
@@ -15,11 +13,6 @@ rbomb <- local({
     }
   ))
 })
-
-batched_toupper <- batch(toupper, 'x',
-  combination_strategy = paste, size = 1, verbose = FALSE)
-
-batched_identity <- batch(identity, 'x', combination_strategy = c, size = 1, verbose = FALSE)
 
 reverse <- function(x, y) c(y, x)
 
