@@ -17,7 +17,9 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, verbose = TRUE,
   trycatch = FALSE, stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
+    if (missing(keys)) stop('Keys must be defined.')
     if (isTRUE(stop)) trycatch <- TRUE
+    if (isTRUE(trycatch)) batchman:::partial_progress$clear()
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
@@ -36,11 +38,11 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
         keys = keys, size = size, verbose = verbose
       )
-      loop(batch_fn, next_batch, combination_strategy, verbose, trycatch)
+      loop(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop)
     }
 }
 
-loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) {
+loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop) {
   verbose <- verbose_set(verbose)
   if (is.null(next_batch)) return(NULL)
   batch_info <- next_batch()
@@ -57,7 +59,12 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
     if (isTRUE(verbose)) {
       if (!is.null(p)) p$tick()$print() else cat('.')
     }
-    batch <- eval(new_call, envir = run_env)
+    batch <- if (isTRUE(trycatch) && identical(stop, FALSE)) {
+      tryCatch(
+        eval(new_call, envir = run_env),
+        error = function(e) NA
+      )
+    } else eval(new_call, envir = run_env) 
     batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
@@ -69,7 +76,10 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch) 
 run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
   if (isTRUE(trycatch))
     tryCatch(body_fn(...),
-      error = function(e) default_batch_error(e, stop, verbose)
+      error = function(e) {
+        default_batch_error(e, stop, verbose)
+        batchman::progress()
+      }
     )
   else body_fn(...)
 }
@@ -142,13 +152,16 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
 }
 
 default_batch_error <- function(e, stop, verbose) {
-  if (stop) {
+  if (isTRUE(stop)) {
     if (verbose) cat('\nERROR... HALTING.\n')
     if(exists('batches') && verbose)
       cat('Partial progress saved to batchman::progress()\n')
     stop(e$message)
   }
-  else warning('Some of the data failed to process because: ', e$message)
+  else {
+    if (grepl('Bad keys - no batched key', e$message)) stop(e$message)
+    warning('Some of the data failed to process because: ', e$message)
+  }
 }
 
 decide_strategy <- function(splitting_strategy) {
@@ -156,5 +169,5 @@ decide_strategy <- function(splitting_strategy) {
 }
 
 verbose_set <- function(verbose) {
-  !identical(getOption('batchman.verbose'), FALSE) && verbose
+  !identical(getOption('batchman.verbose'), FALSE) && isTRUE(verbose)
 }
