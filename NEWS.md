@@ -4,6 +4,7 @@
 
 ## v0.2.4
 * Setting `options('batchman.verbose' = FALSE)` will now dynamically turn off batchman's printed output, even for batched functions after they are generated.  Note that there is still no way to dynamically turn on the verbosity if `verbose = FALSE` was originally set when the function was made.
+* Initial prototypes for covr and travis added.
 
 ## v0.2.3
 * You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages.  This is potentially useful for tests where digging into batchman to set `verbose = FALSE` is annoying.  Keep in mind that this still won't affect batched functions after they are generated.
