@@ -5,8 +5,8 @@
 \title{batch maps a function to a batched version of that function.}
 \usage{
 batch(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy = batchman::combine, size = 50, verbose = TRUE,
-  trycatch = FALSE, stop = FALSE)
+  combination_strategy = batchman::combine, size = 50,
+  batchman.verbose = TRUE, trycatch = FALSE, stop = FALSE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
@@ -22,7 +22,7 @@ Defaults to class-agnostic combination.}
 
 \item{size}{numeric. The size of the packets. Default 50.}
 
-\item{verbose}{logical. Whether or not to announce progress by printing dots.}
+\item{batchman.verbose}{logical. Whether or not to announce progress by printing dots.}
 
 \item{trycatch}{logical. Whether to wrap the function in a tryCatch block.
 Can be used to store and retrieve partial progress on an error.}

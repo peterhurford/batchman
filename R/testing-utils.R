@@ -24,6 +24,6 @@ get_expect_error_fn <- function(trycatch, stop) {
   batchman:::partial_progress$clear()
   batch(fncaller, 'list_fn',
     combination_strategy = function(x,y) unlist(c(x,y)),
-    size = 1, verbose = FALSE, trycatch = trycatch, stop = stop
+    size = 1, batchman.verbose = FALSE, trycatch = trycatch, stop = stop
   )
 }
