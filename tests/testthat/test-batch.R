@@ -226,3 +226,12 @@ test_that('it stops with an error if trycatch is TRUE and stop is TRUE', {
 test_that('it does not batch a bached function', {
   expect_identical(get_before_fn(batch(batch(identity, 'x'), 'x')), identity)
 })
+
+test_that('it does not overwrite verbose', {
+  fn <- function(x, verbose = TRUE) {
+    if(isTRUE(verbose)) cat('words')
+    x
+  }
+  b_fn <- batch(fn, 'x', combination_strategy = c, size = 1, batchman.verbose = FALSE)
+  expect_equal(b_fn(2, verbose = FALSE), 2)
+})

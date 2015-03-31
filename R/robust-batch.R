@@ -11,8 +11,8 @@ robust_batch <- function(batched_fn, ..., batchman.verbose = TRUE, batchman.retr
     environment(batched_fn)$combination_strategy,
     environment(batched_fn)$size,
     batchman.verbose,
-    batchman.trycatch = TRUE,
-    batchman.stop = FALSE
+    trycatch = TRUE,
+    stop = FALSE
   )
   remaining_args <- list(...)
 
