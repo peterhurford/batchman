@@ -45,8 +45,6 @@ To do this, call `robust_batch(batch_fn, ...)` where `batched_fn` is the functio
 The default amount of max retries is 3, but you can change th is by passing `batchman.retries`.
 
 
-* You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set `bachman.verbose = FALSE` is annoying.
-
 
 ## Using Batchman with Big Data
 
@@ -102,3 +100,9 @@ Still not good with matricies. Coming soon.
 ```
 
 Bonus: If you have a list of things to combine, you can call `combine_by_list(list)` to combine them directly.
+
+
+
+## Other Features
+
+* You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set `bachman.verbose = FALSE` is annoying.
