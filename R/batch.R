@@ -8,13 +8,13 @@
 #' @param combination_strategy function. The strategy used to recombine batches.
 #'   Defaults to class-agnostic combination.
 #' @param size numeric. The size of the packets. Default 50.
-#' @param verbose logical. Whether or not to announce progress by printing dots.
+#' @param batchman.verbose logical. Whether or not to announce progress by printing dots.
 #' @param trycatch logical. Whether to wrap the function in a tryCatch block.
 #'   Can be used to store and retrieve partial progress on an error.
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy = batchman::combine, size = 50, verbose = TRUE,
+  combination_strategy = batchman::combine, size = 50, batchman.verbose = TRUE,
   trycatch = FALSE, stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (missing(keys)) stop('Keys must be defined.')
@@ -23,9 +23,9 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
       body_fn <- make_body_fn(batch_fn, keys, splitting_strategy,
-        combination_strategy, size, verbose, trycatch, stop)
+        combination_strategy, size, batchman.verbose, trycatch, stop)
       run_the_batches(..., body_fn = body_fn, trycatch = trycatch,
-        stop = stop, verbose = verbose)
+        stop = stop, batchman.verbose = batchman.verbose)
     }
     attr(batched_fn, 'batched') <- TRUE
     class(batched_fn) <- c('batched_function', 'function')
@@ -33,17 +33,17 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
 }
 
 make_body_fn <- function(batch_fn, keys, splitting_strategy,
-  combination_strategy, size, verbose, trycatch, stop) {
+  combination_strategy, size, batchman.verbose, trycatch, stop) {
     function(...) {
       next_batch <- splitting_strategy(..., batch_fn = batch_fn,
-        keys = keys, size = size, verbose = verbose
+        keys = keys, size = size, batchman.verbose = batchman.verbose
       )
-      loop(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop)
+      loop(batch_fn, next_batch, combination_strategy, batchman.verbose, trycatch, stop)
     }
 }
 
-loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, stop) {
-  verbose <- verbose_set(verbose)
+loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, trycatch, stop) {
+  batchman.verbose <- verbose_set(batchman.verbose)
   if (is.null(next_batch)) return(NULL)
   batch_info <- next_batch()
   new_call <- batch_info$new_call
@@ -51,12 +51,12 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, 
   num_batches <- batch_info$num_batches
   run_env <- list2env(list(batch_fn = batch_fn))
   parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
-  p <- if (isTRUE(verbose) && require(R6))
+  p <- if (isTRUE(batchman.verbose) && require(R6))
     progress_estimated(num_batches, min_time = 3)
   else
     NULL
   while (!batchman:::is.done(new_call)) {
-    if (isTRUE(verbose)) {
+    if (isTRUE(batchman.verbose)) {
       if (!is.null(p)) p$tick()$print() else cat('.')
     }
     batch <- if (isTRUE(trycatch) && identical(stop, FALSE)) {
@@ -73,18 +73,18 @@ loop <- function(batch_fn, next_batch, combination_strategy, verbose, trycatch, 
   if (!batchman:::is.no_batches(batches)) batches
 }
 
-run_the_batches <- function(..., body_fn, trycatch, stop, verbose) {
+run_the_batches <- function(..., body_fn, trycatch, stop, batchman.verbose) {
   if (isTRUE(trycatch))
     tryCatch(body_fn(...),
       error = function(e) {
-        default_batch_error(e, stop, verbose)
+        default_batch_error(e, stop, batchman.verbose)
         batchman::progress()
       }
     )
   else body_fn(...)
 }
 
-default_strategy <- function(..., batch_fn, keys, size, verbose) {
+default_strategy <- function(..., batch_fn, keys, size, batchman.verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   keys <- clean_keys(args, keys)
   if (length(keys) == 0) stop('Bad keys - no batched key matches keys passed.')
@@ -95,7 +95,7 @@ default_strategy <- function(..., batch_fn, keys, size, verbose) {
   if (is.null(what_to_eval)) return(NULL)
   where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
   run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
-  print_batching_message(run_length, size, verbose)
+  print_batching_message(run_length, size, batchman.verbose)
   generate_batch_maker(run_length, where_the_inputs_at, args, size)
 }
 
@@ -129,8 +129,8 @@ cache_functions <- function(args, keys, batch_fn) {
   args
 }
 
-print_batching_message <- function(run_length, size, verbose) {
-  if (run_length > size && verbose_set(verbose))
+print_batching_message <- function(run_length, size, batchman.verbose) {
+  if (run_length > size && verbose_set(batchman.verbose))
     cat('More than', size, 'inputs detected.  Batching...\n')
 }
 
@@ -151,10 +151,10 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
   }
 }
 
-default_batch_error <- function(e, stop, verbose) {
+default_batch_error <- function(e, stop, batchman.verbose) {
   if (isTRUE(stop)) {
-    if (verbose) cat('\nERROR... HALTING.\n')
-    if(exists('batches') && verbose)
+    if (isTRUE(batchman.verbose)) cat('\nERROR... HALTING.\n')
+    if(exists('batches') && batchman.verbose)
       cat('Partial progress saved to batchman::progress()\n')
     stop(e$message)
   }
@@ -168,6 +168,6 @@ decide_strategy <- function(splitting_strategy) {
   if (is.null(splitting_strategy)) batchman:::default_strategy else splitting_strategy
 }
 
-verbose_set <- function(verbose) {
-  !identical(getOption('batchman.verbose'), FALSE) && isTRUE(verbose)
+verbose_set <- function(batchman.verbose) {
+  !identical(getOption('batchman.verbose'), FALSE) && isTRUE(batchman.verbose)
 }

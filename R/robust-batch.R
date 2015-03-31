@@ -3,20 +3,21 @@
 #' @param batched_fn function.  The batched function to re-run more robustly.
 #' @param batchman.retries integer.  The maximum amount of times to retry processing.
 #' @export
-robust_batch <- function(batched_fn, ..., verbose = TRUE, batchman.retries = 3) {
-  robust_batched_fn <- batchman::batch(
+robust_batch <- function(batched_fn, ..., batchman.verbose = TRUE, batchman.retries = 3) {
+  robust_batched_fn <- batch(
     batchman::get_before_fn(batched_fn),
     environment(batched_fn)$keys,
     environment(batched_fn)$splitting_strategy,
     environment(batched_fn)$combination_strategy,
     environment(batched_fn)$size,
-    verbose,
+    batchman.verbose,
     trycatch = TRUE,
     stop = FALSE
   )
   remaining_args <- list(...)
+
   for (try in seq(batchman.retries)) {
-    if (isTRUE(verbose)) {
+    if (isTRUE(batchman.verbose)) {
       cat(paste0('Trying ', try, ' of ', batchman.retries, '...\n'))
       cat(paste0(length(remaining_args[[1]]), ' remaining...\n'))
     }
