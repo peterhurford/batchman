@@ -8,14 +8,14 @@
 #' @param combination_strategy function. The strategy used to recombine batches.
 #'   Defaults to class-agnostic combination.
 #' @param size numeric. The size of the packets. Default 50.
-#' @param batchman.verbose logical. Whether or not to announce progress by printing dots.
 #' @param trycatch logical. Whether to wrap the function in a tryCatch block.
 #'   Can be used to store and retrieve partial progress on an error.
+#' @param batchman.verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy = batchman::combine, size = 50, batchman.verbose = TRUE,
-  trycatch = FALSE, stop = FALSE) {
+  combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
+  batchman.verbose = isTRUE(interactive()), stop = FALSE) {
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (missing(keys)) stop('Keys must be defined.')
     if (isTRUE(stop)) trycatch <- TRUE
@@ -64,7 +64,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, t
         eval(new_call, envir = run_env),
         error = function(e) NA
       )
-    } else eval(new_call, envir = run_env) 
+    } else eval(new_call, envir = run_env)
     batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
@@ -89,7 +89,7 @@ default_strategy <- function(..., batch_fn, keys, size, batchman.verbose) {
   keys <- clean_keys(args, keys)
   if (length(keys) == 0) stop('Bad keys - no batched key matches keys passed.')
   args <- cache_functions(args, keys, batch_fn)
-  where_the_inputs_at <- find_inputs(args, keys) 
+  where_the_inputs_at <- find_inputs(args, keys)
   if (length(where_the_inputs_at) == 0) return(NULL)
   what_to_eval <- args[[where_the_inputs_at[[1]]]]
   if (is.null(what_to_eval)) return(NULL)
