@@ -1,3 +1,6 @@
+## v0.3.2
+* `verbose` is now TRUE by default in interactive mode (where `interactive()` evaluates to TRUE), and FALSE by default in non-interactive mode.
+
 ## v0.3.1
 * Switches `verbose` to `batchman.verbose` so as to not collide with `verbose` arguments within actual functions.
 * Switched to [semantic versioning](http://www.semver.org).
