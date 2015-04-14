@@ -3,7 +3,9 @@
 #' @param batched_fn function.  The batched function to re-run more robustly.
 #' @param batchman.retries integer.  The maximum amount of times to retry processing.
 #' @export
-robust_batch <- function(batched_fn, ..., batchman.verbose = TRUE, batchman.retries = 3) {
+robust_batch <- function(batched_fn, ..., batchman.verbose = isTRUE(interactive()),
+  batchman.retries = 3) {
+
   robust_batched_fn <- batch(
     batchman::get_before_fn(batched_fn),
     environment(batched_fn)$keys,
