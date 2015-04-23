@@ -1,4 +1,4 @@
-## v1.0.0
+## v1.0.0.9000
 
 * Integrated `robust_batch` into `batch`, using a `retry` parameter.  This change is NOT backwards compatible.
 
