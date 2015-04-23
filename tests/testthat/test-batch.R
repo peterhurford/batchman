@@ -289,15 +289,30 @@ test_that("retry works with a splat", {
 test_that("It returns nothing when something always errors, despite retrying.", {
   fn <- function(x) { stop('ERROR') }
   fn2 <- batch(fn, 'x', batchman.verbose = FALSE, retry = 1)
-  expect_equal(length(fn2(seq(200))), 0)
+  expect_equal(fn2(seq(200)), rep(NA, 4))
 })
 
-test_that("It can retry two levels deep", {
+test_that("Retrying one level deep doesn't work when the error is two levels deep.", {
   b_fn <- get_expect_error_fn(retry = 1)
   rbomb$reset()
-  rbomb$set_stubbornness(2)
+  rbomb$set_stubborness(2)
   expect_equal(
     b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
-    c(1, 1, 1, 1, 1)
+    c(1, 1, 1, 1, NA)
   )
 })
+
+lapply(
+  list(list("one", 1), list("two", 2), list("three", 3), list("four", 4)),
+  function(num) {
+    test_that(paste("It can retry", num[[1]], "levels deep"), {
+      b_fn <- get_expect_error_fn(retry = num[[2]])
+      rbomb$reset()
+      rbomb$set_stubborness(num[[2]])
+      expect_equal(
+        b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
+        c(1, 1, 1, 1, 1)
+      )
+    })
+  }
+)

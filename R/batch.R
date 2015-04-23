@@ -62,15 +62,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, t
     if (isTRUE(batchman.verbose)) { update_progress_bar(p) }
 
     batch <- if (isTRUE(trycatch)) {
-      tryCatch(
-        eval(new_call, envir = run_env),
-        error = function(e) {
-          raise_error_or_warning(e, stop, batchman.verbose)
-          if (retry > 0) {
-            eval(new_call, envir = run_env)
-          } else { NA }
-        }
-      )
+      iterated_try_catch(eval(new_call, envir = run_env), stop, retry, new_call, run_env)
     } else { eval(new_call, envir = run_env) }
 
     batches <- if (batchman:::is.no_batches(batches)) batch
@@ -148,6 +140,17 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
     i <<- i + size
     list("new_call" = args, "keys" = keys, "num_batches" = ceiling(run_length / size))
   }
+}
+
+iterated_try_catch <- function(expr, stop, retry, new_call, run_env) {
+  tryCatch(
+    eval(new_call, envir = run_env),
+    error = function(e) {
+      raise_error_or_warning(e, stop, batchman.verbose)
+      if (retry > 0) { iterated_try_catch(expr, stop, retry - 1, new_call, run_env) }
+      else { NA }
+    }
+  )
 }
 
 raise_error_or_warning <- function(e, stop, batchman.verbose) {
