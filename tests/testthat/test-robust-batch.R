@@ -9,6 +9,21 @@ test_that('Robust batch can batch an R Bomb without erroring.', {
   )
 })
 
+test_that('it reduces batch size on errors', {
+  fn <- function(key) {
+    if (length(key) > 20) stop('BROKEN')
+    key
+  }
+  batched_fn <- batch(fn, 'key',
+    combination_strategy = c, size = 50, batchman.verbose = FALSE)
+  result <- robust_batch(
+    batched_fn,
+    1:100,
+    batchman.verbose = TRUE)
+  print(result)
+  expect_equal(result, 1:100)
+})
+
 test_that('It produces the same output as a regular batch would', {
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = TRUE)
   rbomb$reset()
@@ -19,6 +34,7 @@ test_that('It produces the same output as a regular batch would', {
 })
 
 test_that('it still errors with fundamental problems (like no matching keys)', {
+  batchman:::partial_progress$clear()
   batched_reverse <- batch(reverse, 'w',
     combination_strategy = c, size = 1, batchman.verbose = FALSE)
   expect_error(robust_batch(
