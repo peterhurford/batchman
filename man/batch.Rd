@@ -6,13 +6,13 @@
 \usage{
 batch(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
-  batchman.verbose = isTRUE(interactive()), stop = FALSE)
+  batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = 0)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
 
 \item{keys}{vector. The names of the keys within the function to batch.
-Can be '...' if one is batching a splat function with no keys.}
+Can be "..." if one is batching a splat function with no keys.}
 
 \item{splitting_strategy}{function. The strategy used to split up inputs.
 Leave NULL to use the versatile default splitting strategy.}
@@ -28,6 +28,8 @@ Can be used to store and retrieve partial progress on an error.}
 \item{batchman.verbose}{logical. Whether or not to announce progress by printing dots.}
 
 \item{stop}{logical. Whether trycatch should stop if an error is raised.}
+
+\item{retry}{integer. The number of times to retry on error. 0 for no retrying.}
 }
 \description{
 batch maps a function to a batched version of that function.
