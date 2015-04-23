@@ -23,3 +23,25 @@ get_before_fn <- function(fn) environment(fn)$batch_fn
 #' @param fn function. The function to print.
 #' @export
 print.batched_function <- function(fn) print(list(before_fn = get_before_fn(fn), after_fn = body(fn)))
+
+#' Pluralize a word
+pluralize <- function(obj) UseMethod('pluralize')
+
+pluralize.default <- function(obj) stop('Cannot pluralize and object of class: ', class(obj))
+
+pluralize.character <- function(obj) paste0(obj, 's')
+
+pluralize.numeric <- function(obj) {
+  pluralize_one <- function(num) {
+    ending <-
+      if (num == 1) {
+        "st"
+      } else if (num == 2) {
+        "nd"
+      } else if (num == 3) {
+        "rd"
+      } else "th"
+    paste0(num, ending)
+  }
+  vapply(obj, pluralize_one, character(1))
+}
