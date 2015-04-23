@@ -33,6 +33,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     batched_fn
 }
 
+
 make_body_fn <- function(batch_fn, keys, splitting_strategy,
   combination_strategy, size, batchman.verbose, trycatch, stop) {
     function(...) {
@@ -43,6 +44,7 @@ make_body_fn <- function(batch_fn, keys, splitting_strategy,
     }
 }
 
+
 loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, trycatch, stop) {
   batchman.verbose <- verbose_set(batchman.verbose)
   if (is.null(next_batch)) return(NULL)
@@ -52,37 +54,36 @@ loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, t
   num_batches <- batch_info$num_batches
   run_env <- list2env(list(batch_fn = batch_fn))
   parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
-  p <- if (isTRUE(batchman.verbose) && require(R6))
-    progress_estimated(num_batches, min_time = 3)
-  else
-    NULL
+  p <- progress_bar()
+
   while (!batchman:::is.done(new_call)) {
-    if (isTRUE(batchman.verbose)) {
-      if (!is.null(p)) p$tick()$print() else cat('.')
-    }
+    if (isTRUE(batchman.verbose)) { update_progress_bar(p) }
+
     batch <- if (isTRUE(trycatch) && identical(stop, FALSE)) {
-      tryCatch(
-        eval(new_call, envir = run_env),
-        error = function(e) NA
-      )
-    } else eval(new_call, envir = run_env)
+      iterated_try_catch(eval(new_call, envir = run_env))
+    } else {
+      eval(new_call, envir = run_env),
+    }
+
     batches <- if (batchman:::is.no_batches(batches)) batch
       else combination_strategy(batches, batch)
+
     if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
     new_call <- next_batch()$new_call
   }
   if (!batchman:::is.no_batches(batches)) batches
 }
 
+
 run_the_batches <- function(..., body_fn, trycatch, stop, batchman.verbose) {
-  if (isTRUE(trycatch))
+  if (isTRUE(trycatch)) {
     tryCatch(body_fn(...),
       error = function(e) {
         default_batch_error(e, stop, batchman.verbose)
         batchman::progress()
       }
     )
-  else body_fn(...)
+  } else body_fn(...)
 }
 
 default_strategy <- function(..., batch_fn, keys, size, batchman.verbose) {
@@ -171,4 +172,15 @@ decide_strategy <- function(splitting_strategy) {
 
 verbose_set <- function(batchman.verbose) {
   !identical(getOption('batchman.verbose'), FALSE) && isTRUE(batchman.verbose)
+}
+
+progress_bar <- function(batchman.verbose) {
+  if (isTRUE(batchman.verbose) && require(R6))
+    progress_estimated(num_batches, min_time = 3)
+  else
+    NULL
+}
+
+update_progress_bar <- function(bar) {
+  if (!is.null(bar)) bar$tick()$print() else cat('.')
 }
