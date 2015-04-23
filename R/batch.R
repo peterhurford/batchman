@@ -12,16 +12,17 @@
 #'   Can be used to store and retrieve partial progress on an error.
 #' @param batchman.verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether trycatch should stop if an error is raised.
-#' @param retry logical. Whether to re-run if there is an error.
+#' @param retry integer. The number of times to retry on error. 0 for no retrying.
 #' @export
 batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
-  batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = FALSE) {
+  batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = 0) {
 
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (missing(keys)) stop("Keys must be defined.")
     if (isTRUE(stop)) trycatch <- TRUE
-    if (isTRUE(retry)) { stop <- FALSE; trycatch <- TRUE }
+    if (!is.numeric(retry) && retry %% 1 == 0) stop("Retry must be an integer.")
+    if (retry > 0) { stop <- FALSE; trycatch <- TRUE }
     if (isTRUE(trycatch)) batchman:::partial_progress$clear()
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
@@ -65,7 +66,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, t
         eval(new_call, envir = run_env),
         error = function(e) {
           raise_error_or_warning(e, stop, batchman.verbose)
-          if (isTRUE(retry)) {
+          if (retry > 0) {
             eval(new_call, envir = run_env)
           } else { NA }
         }

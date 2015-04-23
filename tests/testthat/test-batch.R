@@ -236,8 +236,8 @@ test_that("it does not overwrite verbose", {
   expect_equal(b_fn(2, verbose = FALSE), 2)
 })
 
-test_that("With retry = TRUE, it can batch an R Bomb without erroring.", {
-  b_fn <- get_expect_error_fn(retry = TRUE)
+test_that("With retry = 1, it can batch an R Bomb without erroring.", {
+  b_fn <- get_expect_error_fn(retry = 1)
   rbomb$reset()
   expect_equal(
     b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
@@ -254,7 +254,7 @@ test_that("retrying works with two keys", {
     c("x", "y"),
     combination_strategy = function(x,y) unlist(c(x,y)),
     size = 1,
-    retry = TRUE,
+    retry = 1,
     batchman.verbose = FALSE
   )
   o <- batch_fn(
@@ -276,7 +276,7 @@ test_that("retry works with a splat", {
     combination_strategy = c,
     size = 1,
     batchman.verbose = FALSE,
-    retry = TRUE
+    retry = 1
   )
   o <- batch_fn(
     list(fn1),
@@ -286,8 +286,14 @@ test_that("retry works with a splat", {
   expect_equal(o, list(1, 1, 1))
 })
 
+test_that("It returns nothing when something always errors, despite retrying.", {
+  fn <- function(x) { stop('ERROR') }
+  fn2 <- batch(fn, 'x', batchman.verbose = FALSE, retry = 1)
+  expect_equal(length(fn2(seq(200))), 0)
+})
+
 test_that("It can retry two levels deep", {
-  b_fn <- get_expect_error_fn(retry = TRUE)
+  b_fn <- get_expect_error_fn(retry = 1)
   rbomb$reset()
   rbomb$set_stubbornness(2)
   expect_equal(
