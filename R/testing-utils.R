@@ -1,10 +1,23 @@
 rbomb <- local({
-  .defused <- FALSE
+  .defused <- FALSE  # Whether or not it will explode when evaluated
+  .stubborness <- 1  # How many defuses it takes to 
   structure(list(
     class = 'rbomb',
     is.defused = function() .defused,
-    defuse = function() .defused <<- TRUE,
-    reset = function() .defused <<- FALSE,
+    set_stubborness = function(val) .stubborness <<- val,
+    defuse = function() {
+      if (.stubborness == 1) {
+        .defused <<- TRUE
+      } else {
+        .stubborness <<- .stubborness - 1
+      }
+      invisible()
+    },
+    reset = function() {
+      .defused <<- FALSE
+      .stubbornness <<- 1
+      invisible()
+    },
     detonate = function(val = 1) {
       if (!rbomb$is.defused()) {
         rbomb$defuse()

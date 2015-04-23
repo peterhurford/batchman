@@ -285,3 +285,13 @@ test_that('retry works with a splat', {
   )
   expect_equal(o, list(1, 1, 1))
 })
+
+test_that('It can retry two levels deep', {
+  b_fn <- get_expect_error_fn(retry = TRUE)
+  rbomb$reset()
+  rbomb$set_stubbornness(2)
+  expect_equal(
+    b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
+    c(1, 1, 1, 1, 1)
+  )
+})
