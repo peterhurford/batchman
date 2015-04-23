@@ -22,6 +22,26 @@ check_for_batch_length_of <- function(len) {
   expect_equal(len, batch_length)
 }
 
+test_that("it errors if keys is not passed", {
+  expect_error(batch(identity), "Keys must be defined.")
+})
+
+test_that("it errors if retry is not a positive integer", {
+  expect_error(batch(identity, "x", retry = "pizza", trycatch = FALSE))
+  expect_error(batch(identity, "x", retry = 0.2, trycatch = FALSE))
+  expect_error(batch(identity, "x", retry = -1, trycatch = FALSE))
+})
+
+test_that("if stop is TRUE, tryCatch is overwritten to be TRUE", {
+  batch_fn <- batch(identity, "x", stop = TRUE, trycatch = FALSE)
+  expect_true(environment(batch_fn)$trycatch)
+})
+
+test_that("if retry > 0, tryCatch is overwritten to be TRUE", {
+  batch_fn <- batch(identity, "x", retry = 1, trycatch = FALSE)
+  expect_true(environment(batch_fn)$trycatch)
+})
+
 for (i in seq(1:5)) {
   test_that(paste("it sends things in batches of size", i), {
     check_for_batch_length_of(i)
@@ -287,9 +307,13 @@ test_that("retry works with a splat", {
 })
 
 test_that("It returns nothing when something always errors, despite retrying.", {
-  fn <- function(x) { stop('ERROR') }
-  fn2 <- batch(fn, 'x', batchman.verbose = FALSE, retry = 1, combination_strategy = c)
+  fn2 <- batch(error_fn, 'x', batchman.verbose = FALSE, retry = 1, combination_strategy = c)
   expect_equal(fn2(seq(200)), rep(NULL, 4))
+})
+
+test_that("It will error if it reaches max retries and stop is TRUE.", {
+  fn2 <- batch(error_fn, 'x', batchman.verbose = FALSE, stop = TRUE, retry = 1, combination_strategy = c)
+  expect_error(fn2(seq(200)))
 })
 
 test_that("Retrying one level deep doesn't work when the error is two levels deep.", {

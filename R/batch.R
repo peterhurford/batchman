@@ -20,9 +20,10 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
 
     if (is.batched_fn(batch_fn)) return(batch_fn)
     if (missing(keys)) stop("Keys must be defined.")
-    if (isTRUE(stop)) trycatch <- TRUE
-    if (!is.numeric(retry) && retry %% 1 == 0) stop("Retry must be an integer.")
-    if (retry > 0) { stop <- FALSE; trycatch <- TRUE }
+    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
+    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
+      stop("Retry must be an positive integer.")
+    }
     if (isTRUE(trycatch)) batchman:::partial_progress$clear()
     splitting_strategy <- decide_strategy(splitting_strategy)
     batched_fn <- function(...) {
@@ -146,15 +147,15 @@ iterated_try_catch <- function(expr, stop, retry, new_call, run_env) {
   tryCatch(
     eval(new_call, envir = run_env),
     error = function(e) {
-      raise_error_or_warning(e, stop, batchman.verbose)
+      raise_error_or_warning(e, stop, retry, batchman.verbose)
       if (retry > 0) { iterated_try_catch(expr, stop, retry - 1, new_call, run_env) }
       else { NULL }
     }
   )
 }
 
-raise_error_or_warning <- function(e, stop, batchman.verbose) {
-  if (isTRUE(stop)) {
+raise_error_or_warning <- function(e, stop, retry, batchman.verbose) {
+  if (isTRUE(stop) && retry == 0) {
     if (isTRUE(batchman.verbose)) cat("\nERROR... HALTING.\n")
     if(exists("batches") && isTRUE(batchman.verbose)) {
       cat("Partial progress saved to batchman::progress()\n")

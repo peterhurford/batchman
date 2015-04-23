@@ -46,3 +46,5 @@ get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0) {
     retry = retry
   )
 }
+
+error_fn <- function(x) { stop('ERROR') }
