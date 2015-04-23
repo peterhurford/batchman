@@ -15,11 +15,13 @@ test_that('it reduces batch size on errors', {
     key
   }
   batched_fn <- batch(fn, 'key',
-    combination_strategy = c, size = 30, batchman.verbose = FALSE)
-  print(robust_batch(
+    combination_strategy = c, size = 50, batchman.verbose = FALSE)
+  result <- robust_batch(
     batched_fn,
-    1:500,
-    batchman.verbose = TRUE))
+    1:100,
+    batchman.verbose = TRUE)
+  print(result)
+  expect_equal(result, 1:100)
 })
 
 test_that('It produces the same output as a regular batch would', {
