@@ -1,18 +1,18 @@
-batches <- structure(list(), class = 'no_batches')
-done <- structure(list(), class = 'batchman.is.done')
+batches <- structure(list(), class = "no_batches")
+done <- structure(list(), class = "batchman.is.done")
 
 #' A helper method to determine if batches doesn't contain batches.
 #' @param batches The object to see if it contains batches.
-is.no_batches <- function(batches) is(batches, 'no_batches')
+is.no_batches <- function(batches) is(batches, "no_batches")
 
 #' A helper method to determine if batchman is done batching.
 #' @param call The batchman call object.
-is.done <- function(call) is(call, 'batchman.is.done')
+is.done <- function(call) is(call, "batchman.is.done")
 
 #' A helper method to determine if a function is already batched.
 #' @param fn function. The function to test.
 #' @export
-is.batched_fn <- function(fn) isTRUE(attr(fn, 'batched'))
+is.batched_fn <- function(fn) isTRUE(attr(fn, "batched"))
 
 #' A helper method to get the pre-batched function of a batched function.
 #' @param fn function. The batched function to look for.

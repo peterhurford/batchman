@@ -2,7 +2,7 @@ rbomb <- local({
   .defused <- FALSE  # Whether or not it will explode when evaluated
   .stubborness <- 1  # How many defuses it takes to 
   structure(list(
-    class = 'rbomb',
+    class = "rbomb",
     is.defused = function() .defused,
     set_stubborness = function(val) .stubborness <<- val,
     defuse = function() {
@@ -21,7 +21,7 @@ rbomb <- local({
     detonate = function(val = 1) {
       if (!rbomb$is.defused()) {
         rbomb$defuse()
-        stop('ESPLODZE!')
+        stop("ESPLODZE!")
       } else val
     }
   ))
@@ -37,7 +37,7 @@ get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = FALSE) {
   batchman:::partial_progress$clear()
   batch(
     fncaller,
-    'list_fn',
+    "list_fn",
     combination_strategy = function(x,y) unlist(c(x,y)),
     size = 1,
     batchman.verbose = FALSE,

@@ -2,7 +2,7 @@
 #'
 #' @param batch_fn function. The method to batch over.
 #' @param keys vector. The names of the keys within the function to batch.
-#'   Can be '...' if one is batching a splat function with no keys.
+#'   Can be "..." if one is batching a splat function with no keys.
 #' @param splitting_strategy function. The strategy used to split up inputs.
 #'   Leave NULL to use the versatile default splitting strategy.
 #' @param combination_strategy function. The strategy used to recombine batches.
@@ -19,7 +19,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = FALSE) {
 
     if (is.batched_fn(batch_fn)) return(batch_fn)
-    if (missing(keys)) stop('Keys must be defined.')
+    if (missing(keys)) stop("Keys must be defined.")
     if (isTRUE(stop)) trycatch <- TRUE
     if (isTRUE(retry)) { stop <- FALSE; trycatch <- TRUE }
     if (isTRUE(trycatch)) batchman:::partial_progress$clear()
@@ -29,8 +29,8 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         combination_strategy, size, batchman.verbose, trycatch, stop, retry)
       body_fn(...)
     }
-    attr(batched_fn, 'batched') <- TRUE
-    class(batched_fn) <- c('batched_function', 'function')
+    attr(batched_fn, "batched") <- TRUE
+    class(batched_fn) <- c("batched_function", "function")
     batched_fn
 }
 
@@ -85,7 +85,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, t
 default_strategy <- function(..., batch_fn, keys, size, batchman.verbose) {
   args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
   keys <- clean_keys(args, keys)
-  if (length(keys) == 0) stop('Bad keys - no batched key matches keys passed.')
+  if (length(keys) == 0) stop("Bad keys - no batched key matches keys passed.")
   args <- cache_functions(args, keys, batch_fn)
   where_the_inputs_at <- find_inputs(args, keys)
   if (length(where_the_inputs_at) == 0) return(NULL)
@@ -98,12 +98,12 @@ default_strategy <- function(..., batch_fn, keys, size, batchman.verbose) {
 }
 
 find_inputs <- function(args, keys) {
-  if(identical(keys, '...')) seq(2, length(args))
-  else grep(paste0(keys, collapse='|'), names(args))
+  if(identical(keys, "...")) seq(2, length(args))
+  else grep(paste0(keys, collapse="|"), names(args))
 }
 
 find_in_stack <- function(what_to_eval) {
-  if (!is(what_to_eval, 'name')) return(3)
+  if (!is(what_to_eval, "name")) return(3)
   stacks_to_search = c(3, 4)
   for (stack in stacks_to_search) {
     if (exists(
@@ -115,7 +115,7 @@ find_in_stack <- function(what_to_eval) {
 }
 
 clean_keys <- function(args, keys) {
-  if (!identical(keys, '...')) keys <- keys[keys %in% names(args)]
+  if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
   keys
 }
 
@@ -129,7 +129,7 @@ cache_functions <- function(args, keys, batch_fn) {
 
 print_batching_message <- function(run_length, size, batchman.verbose) {
   if (run_length > size && verbose_set(batchman.verbose))
-    cat('More than', size, 'inputs detected.  Batching...\n')
+    cat("More than", size, "inputs detected.  Batching...\n")
 }
 
 generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
@@ -137,7 +137,7 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
   second_arg <- quote(x[seq(y, z)])
   keys <- args[where_the_inputs_at]
   function() {
-    if (i > run_length) return(list('new_call' = batchman:::done))
+    if (i > run_length) return(list("new_call" = batchman:::done))
     for (j in where_the_inputs_at) {
       second_arg[[2]] <- args[[j]]
       second_arg[[3]][[2]] <- i
@@ -145,20 +145,20 @@ generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
       args[[j]] <- second_arg
     }
     i <<- i + size
-    list('new_call' = args, 'keys' = keys, 'num_batches' = ceiling(run_length / size))
+    list("new_call" = args, "keys" = keys, "num_batches" = ceiling(run_length / size))
   }
 }
 
 raise_error_or_warning <- function(e, stop, batchman.verbose) {
   if (isTRUE(stop)) {
-    if (isTRUE(batchman.verbose)) cat('\nERROR... HALTING.\n')
-    if(exists('batches') && isTRUE(batchman.verbose)) {
-      cat('Partial progress saved to batchman::progress()\n')
+    if (isTRUE(batchman.verbose)) cat("\nERROR... HALTING.\n")
+    if(exists("batches") && isTRUE(batchman.verbose)) {
+      cat("Partial progress saved to batchman::progress()\n")
     }
     stop(e$message)
   } else {
-    if (grepl('Bad keys - no batched key', e$message)) stop(e$message)
-    warning('Some of the data failed to process because: ', e$message)
+    if (grepl("Bad keys - no batched key", e$message)) stop(e$message)
+    warning("Some of the data failed to process because: ", e$message)
   }
 }
 
@@ -167,7 +167,7 @@ decide_strategy <- function(splitting_strategy) {
 }
 
 verbose_set <- function(batchman.verbose) {
-  !identical(getOption('batchman.verbose'), FALSE) && isTRUE(batchman.verbose)
+  !identical(getOption("batchman.verbose"), FALSE) && isTRUE(batchman.verbose)
 }
 
 progress_bar <- function(batchman.verbose) {
@@ -178,5 +178,5 @@ progress_bar <- function(batchman.verbose) {
 }
 
 update_progress_bar <- function(bar) {
-  if (!is.null(bar)) bar$tick()$print() else cat('.')
+  if (!is.null(bar)) bar$tick()$print() else cat(".")
 }
