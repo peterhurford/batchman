@@ -214,7 +214,7 @@ test_that("it must be more efficient to batch than to execute an O(x^2) function
 test_that("it keeps processing with an error if trycatch is TRUE and stop is FALSE", {
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = FALSE)
   rbomb$reset()
-  expect_equal(c(1, 1, 1, NA, 1), b_fn(c(fn1, fn1, fn1, rbomb$detonate, fn1)))
+  expect_equal(c(1, 1, 1, NULL, 1), b_fn(c(fn1, fn1, fn1, rbomb$detonate, fn1)))
 })
 
 test_that("it stops with an error if trycatch is TRUE and stop is TRUE", {
@@ -288,8 +288,8 @@ test_that("retry works with a splat", {
 
 test_that("It returns nothing when something always errors, despite retrying.", {
   fn <- function(x) { stop('ERROR') }
-  fn2 <- batch(fn, 'x', batchman.verbose = FALSE, retry = 1)
-  expect_equal(fn2(seq(200)), rep(NA, 4))
+  fn2 <- batch(fn, 'x', batchman.verbose = FALSE, retry = 1, combination_strategy = c)
+  expect_equal(fn2(seq(200)), rep(NULL, 4))
 })
 
 test_that("Retrying one level deep doesn't work when the error is two levels deep.", {
@@ -298,7 +298,7 @@ test_that("Retrying one level deep doesn't work when the error is two levels dee
   rbomb$set_stubborness(2)
   expect_equal(
     b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
-    c(1, 1, 1, 1, NA)
+    c(1, 1, 1, 1, NULL)
   )
 })
 

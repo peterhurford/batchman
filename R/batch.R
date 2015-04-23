@@ -148,7 +148,7 @@ iterated_try_catch <- function(expr, stop, retry, new_call, run_env) {
     error = function(e) {
       raise_error_or_warning(e, stop, batchman.verbose)
       if (retry > 0) { iterated_try_catch(expr, stop, retry - 1, new_call, run_env) }
-      else { NA }
+      else { NULL }
     }
   )
 }
