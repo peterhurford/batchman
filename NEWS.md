@@ -1,3 +1,7 @@
+## v1.0.0
+
+* Integrated `robust_batch` into `batch`, using a `retry` parameter.
+
 ## v0.3.2
 * `verbose` is now TRUE by default in interactive mode (where `interactive()` evaluates to TRUE), and FALSE by default in non-interactive mode.
 
