@@ -176,7 +176,7 @@ verbose_set <- function(batchman.verbose) {
 }
 
 progress_bar <- function(batchman.verbose) {
-  if (isTRUE(batchman.verbose) && require(R6)) {
+  if (isTRUE(batchman.verbose) && suppressMessages(require(R6))) {
     progress_estimated(num_batches, min_time = 3)
   }
 }
