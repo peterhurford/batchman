@@ -169,7 +169,14 @@ iterated_try_catch <- function(expr, stop, retry, batchman.verbose,
               "\n"
             )
           }
-          iterated_try_catch(expr, stop, retry - 1, new_call, run_env)
+          iterated_try_catch(
+            expr,
+            stop,
+            retry - 1,
+            batchman.verbose,
+            new_call,
+            run_env
+          )
         }
         else { NULL }
       }
