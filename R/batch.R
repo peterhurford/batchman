@@ -40,7 +40,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       generate_batch_maker(run_length, where_the_inputs_at, args, size)
     }
 
-    loop <- function() {
+    loop <- function(next_batch) {
       batchman.verbose <- verbose_set()
       if (is.null(next_batch)) return(NULL)
       batch_info <- next_batch()
@@ -49,7 +49,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       num_batches <- batch_info$num_batches
       run_env <- list2env(list(batch_fn = batch_fn))
       parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
-      p <- progress_bar(batchman.verbose, num_batches)
+      p <- progress_bar(num_batches)
 
       while (!batchman:::is.done(new_call)) {
         if (isTRUE(batchman.verbose)) { update_progress_bar(p) }
@@ -58,7 +58,8 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
           iterated_try_catch(
             eval(new_call, envir = run_env),
             new_call,
-            run_env
+            run_env,
+            retry
           )
         } else { eval(new_call, envir = run_env) }
 
@@ -74,8 +75,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     make_body_fn <- function() {
       function(...) {
         next_batch <- splitting_strategy(...)
-        browser()
-        loop()
+        loop(next_batch)
       }
     }
 
@@ -139,7 +139,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       tryCatch(
         eval(new_call, envir = run_env),
         error = function(e) {
-          raise_error_or_warning(e)
+          raise_error_or_warning(e, retry)
           if (retry > 0) {
             if (isTRUE(batchman.verbose)) {
               cat(
@@ -161,7 +161,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       )
     }
 
-    raise_error_or_warning <- function(e) {
+    raise_error_or_warning <- function(e, retry) {
       if (isTRUE(stop) && retry == 0) {
         if (isTRUE(batchman.verbose)) cat("\nERROR... HALTING.\n")
         if(exists("batches") && isTRUE(batchman.verbose)) {
@@ -183,7 +183,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       !identical(getOption("batchman.verbose"), FALSE) && isTRUE(batchman.verbose)
     }
 
-    progress_bar <- function() {
+    progress_bar <- function(num_batches) {
       if (isTRUE(batchman.verbose) && suppressMessages(require(R6))) {
         progress_estimated(num_batches, min_time = 3)
       }
