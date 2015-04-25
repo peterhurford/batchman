@@ -57,7 +57,7 @@ loop <- function(batch_fn, next_batch, combination_strategy, batchman.verbose, t
   num_batches <- batch_info$num_batches
   run_env <- list2env(list(batch_fn = batch_fn))
   parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
-  p <- progress_bar(batchman.verbose)
+  p <- progress_bar(batchman.verbose, num_batches)
 
   while (!batchman:::is.done(new_call)) {
     if (isTRUE(batchman.verbose)) { update_progress_bar(p) }
@@ -204,7 +204,7 @@ verbose_set <- function(batchman.verbose) {
   !identical(getOption("batchman.verbose"), FALSE) && isTRUE(batchman.verbose)
 }
 
-progress_bar <- function(batchman.verbose) {
+progress_bar <- function(batchman.verbose, num_batches) {
   if (isTRUE(batchman.verbose) && suppressMessages(require(R6))) {
     progress_estimated(num_batches, min_time = 3)
   }
