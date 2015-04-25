@@ -41,7 +41,6 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     }
 
     loop <- function(next_batch) {
-      batchman.verbose <- verbose_set()
       if (is.null(next_batch)) return(NULL)
       batch_info <- next_batch()
       new_call <- batch_info$new_call
@@ -52,7 +51,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       p <- progress_bar(num_batches)
 
       while (!batchman:::is.done(new_call)) {
-        if (isTRUE(batchman.verbose)) { update_progress_bar(p) }
+        if (`verbose_set?`()) { update_progress_bar(p) }
 
         batch <- if (isTRUE(trycatch)) {
           iterated_try_catch(
@@ -88,11 +87,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       if (!is(what_to_eval, "name")) return(3)
       stacks_to_search = c(3, 4)
       for (stack in stacks_to_search) {
-        if (exists(
+        `exists?` <- exists(
           as.character(what_to_eval),
           envir = parent.frame(stack + 1),
-          inherits = FALSE)
-        ) return (stack)
+          inherits = FALSE
+        )
+        if (`exists?`) return(stack)
       }
     }
 
@@ -110,7 +110,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     }
 
     print_batching_message <- function(run_length, size) {
-      if (run_length > size && verbose_set())
+      if (run_length > size && `verbose_set?`())
         cat("More than", size, "inputs detected.  Batching...\n")
     }
 
@@ -141,7 +141,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         error = function(e) {
           raise_error_or_warning(e, retry)
           if (retry > 0) {
-            if (isTRUE(batchman.verbose)) {
+            if (isTRUE(`verbose_set?`())) {
               cat(
                 "Retrying for the ",
                 batbelt::as.ordinal(retry),
@@ -149,12 +149,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
                 "\n"
               )
             }
-            iterated_try_catch(
-              expr,
-              new_call,
-              run_env,
-              retry - 1
-            )
+            iterated_try_catch(expr, new_call, run_env, retry - 1)
           }
           else { NULL }
         }
@@ -163,8 +158,8 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
 
     raise_error_or_warning <- function(e, retry) {
       if (isTRUE(stop) && retry == 0) {
-        if (isTRUE(batchman.verbose)) cat("\nERROR... HALTING.\n")
-        if(exists("batches") && isTRUE(batchman.verbose)) {
+        if (`verbose_set?`()) cat("\nERROR... HALTING.\n")
+        if(exists("batches") && `verbose_set?`()) {
           cat("Partial progress saved to batchman::progress()\n")
         }
         stop(e$message)
@@ -179,12 +174,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       else { splitting_strategy }
     }
 
-    verbose_set <- function() {
+    `verbose_set?` <- function() {
       !identical(getOption("batchman.verbose"), FALSE) && isTRUE(batchman.verbose)
     }
 
     progress_bar <- function(num_batches) {
-      if (isTRUE(batchman.verbose) && suppressMessages(require(R6))) {
+      if (`verbose_set?`() && suppressMessages(require(R6))) {
         progress_estimated(num_batches, min_time = 3)
       }
     }
