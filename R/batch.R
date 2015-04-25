@@ -18,25 +18,11 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
   batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = 0) {
 
-    default_strategy <- function(...) {
-      args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
-      keys <- clean_keys(args, keys)
-      if (length(keys) == 0) stop("Bad keys - no batched key matches keys passed.")
-      args <- cache_functions(args, keys)
-      where_the_inputs_at <- find_inputs(args, keys)
-      if (length(where_the_inputs_at) == 0) return(NULL)
-      what_to_eval <- args[[where_the_inputs_at[[1]]]]
-      if (is.null(what_to_eval)) return(NULL)
-      run_length <- calculate_run_length(what_to_eval)
-      print_batching_message(run_length, size)
-      generate_batch_maker(run_length, where_the_inputs_at, args, size)
-    }
-
-    calculate_run_length <- function(what_to_eval) {
-      eval(
-        bquote(NROW(.(what_to_eval))),
-        envir = parent.frame(find_in_stack(what_to_eval))
-      )
+    make_body_fn <- function(splitting_strategy) {
+      function(...) {
+        next_batch <- splitting_strategy(...)
+        loop(next_batch)
+      }
     }
 
     loop <- function(next_batch) {
@@ -69,18 +55,6 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       if (!is.no_batches(batches)) batches
     }
 
-    make_body_fn <- function(splitting_strategy) {
-      function(...) {
-        next_batch <- splitting_strategy(...)
-        loop(next_batch)
-      }
-    }
-
-    find_inputs <- function(args, keys) {
-      if(identical(keys, "...")) seq(2, length(args))
-      else grep(paste0(keys, collapse="|"), names(args))
-    }
-
     find_in_stack <- function(what_to_eval) {
       if (!is(what_to_eval, "name")) return(3)
       stacks_to_search = c(3, 4)
@@ -94,44 +68,13 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       }
     }
 
-    clean_keys <- function(args, keys) {
-      if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
-      keys
-    }
-
-    cache_functions <- function(args, keys) {
-      for (key in keys) {
-        if (is.call(args[[key]]))
-          args[[key]] <- eval(args[[key]], envir = parent.frame(find_in_stack(key)+1))
-      }
-      args
-    }
-
-    print_batching_message <- function(run_length, size) {
-      if (run_length > size && `verbose_set?`()) {
-        cat("More than", size, "inputs detected.  Batching...\n")
-      }
-    }
-
-    generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
-      i <- 1
-      second_arg <- quote(x[seq(y, z)])
-      keys <- args[where_the_inputs_at]
-      function() {
-        if (i > run_length) return(list("new_call" = done))
-        for (j in where_the_inputs_at) {
-          second_arg[[2]] <- args[[j]]
-          second_arg[[3]][[2]] <- i
-          second_arg[[3]][[3]] <- min(i + size - 1, run_length)
-          args[[j]] <- second_arg
-        }
-        i <<- i + size
-        list(
-          "new_call" = args,
-          "keys" = keys,
-          "num_batches" = ceiling(run_length / size)
-        )
-      }
+    `verbose_set?` <- function() {
+      # Verbose is true if it is enabled by the option OR
+      # if it is not disabled by the option and is true in argument
+      isTRUE(getOption("batchman.verbose")) || (
+        !identical(getOption("batchman.verbose"), FALSE) &&
+        isTRUE(batchman.verbose)
+      )
     }
 
     iterated_try_catch <- function(expr, new_call, run_env, current_try) {
@@ -173,13 +116,70 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       else { splitting_strategy }
     }
 
-    `verbose_set?` <- function() {
-      # Verbose is true if it is enabled by the option OR
-      # if it is not disabled by the option and is true in argument
-      isTRUE(getOption("batchman.verbose")) || (
-        !identical(getOption("batchman.verbose"), FALSE) &&
-        isTRUE(batchman.verbose)
+    default_strategy <- function(...) {
+      args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
+      keys <- clean_keys(args, keys)
+      if (length(keys) == 0) stop("Bad keys - no batched key matches keys passed.")
+      args <- cache_functions(args, keys)
+      where_the_inputs_at <- find_inputs(args, keys)
+      if (length(where_the_inputs_at) == 0) return(NULL)
+      what_to_eval <- args[[where_the_inputs_at[[1]]]]
+      if (is.null(what_to_eval)) return(NULL)
+      run_length <- calculate_run_length(what_to_eval)
+      print_batching_message(run_length, size)
+      generate_batch_maker(run_length, where_the_inputs_at, args, size)
+    }
+
+    clean_keys <- function(args, keys) {
+      if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
+      keys
+    }
+
+    cache_functions <- function(args, keys) {
+      for (key in keys) {
+        if (is.call(args[[key]]))
+          args[[key]] <- eval(args[[key]], envir = parent.frame(find_in_stack(key)+1))
+      }
+      args
+    }
+
+    find_inputs <- function(args, keys) {
+      if(identical(keys, "...")) seq(2, length(args))
+      else grep(paste0(keys, collapse="|"), names(args))
+    }
+
+    calculate_run_length <- function(what_to_eval) {
+      eval(
+        bquote(NROW(.(what_to_eval))),
+        envir = parent.frame(find_in_stack(what_to_eval))
       )
+    }
+
+    print_batching_message <- function(run_length, size) {
+      if (run_length > size && `verbose_set?`()) {
+        cat("More than", size, "inputs detected.  Batching...\n")
+      }
+    }
+
+    generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
+      i <- 1
+      second_arg <- quote(x[seq(y, z)])
+      keys <- args[where_the_inputs_at]
+      function() {
+        if (i > run_length) return(list("new_call" = done))
+        for (j in where_the_inputs_at) {
+          second_arg[[2]] <- args[[j]]
+          second_arg[[3]][[2]] <- i
+          second_arg[[3]][[3]] <- min(i + size - 1, run_length)
+          args[[j]] <- second_arg
+        }
+        i <<- i + size
+        list(
+          "new_call" = args,
+          "keys" = keys,
+          "num_batches" = ceiling(run_length / size)
+        )
+      }
     }
 
 
