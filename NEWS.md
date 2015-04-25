@@ -1,3 +1,7 @@
+## v1.0.0.9001
+
+* Fixed a bug in the progress bar.
+
 ## v1.0.0.9000
 
 * Integrated `robust_batch` into `batch`, using a `retry` parameter.  This change is NOT backwards compatible.
