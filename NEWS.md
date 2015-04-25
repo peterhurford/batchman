@@ -1,3 +1,8 @@
+## v1.0.0.9002
+
+* Refactors the codebase for improved readibility.
+* Introduces the ability to set `options(batchman.verbose = TRUE)` to dynamically turn on verbosity.
+
 ## v1.0.0.9001
 
 * Fixed a bug in the progress bar.
