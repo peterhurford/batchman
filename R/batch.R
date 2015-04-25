@@ -135,21 +135,21 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       }
     }
 
-    iterated_try_catch <- function(expr, new_call, run_env, retry) {
+    iterated_try_catch <- function(expr, new_call, run_env, current_try) {
       tryCatch(
         eval(new_call, envir = run_env),
         error = function(e) {
-          raise_error_or_warning(e, retry)
-          if (retry > 0) {
+          raise_error_or_warning(e, current_try)
+          if (current_try > 0) {
             if (isTRUE(`verbose_set?`())) {
               cat(
                 "Retrying for the",
-                batbelt::as.ordinal(retry),
+                batbelt::as.ordinal(retry - current_try + 1),
                 "time.",
                 "\n"
               )
             }
-            iterated_try_catch(expr, new_call, run_env, retry - 1)
+            iterated_try_catch(expr, new_call, run_env, current_try - 1)
           }
           else { NULL }
         }
