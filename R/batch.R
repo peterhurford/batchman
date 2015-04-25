@@ -34,10 +34,16 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       if (length(where_the_inputs_at) == 0) return(NULL)
       what_to_eval <- args[[where_the_inputs_at[[1]]]]
       if (is.null(what_to_eval)) return(NULL)
-      where_the_eval_at <- parent.frame(find_in_stack(what_to_eval))
-      run_length <- eval(bquote(NROW(.(what_to_eval))), envir = where_the_eval_at)
+      run_length <- calculate_run_length(what_to_eval)
       print_batching_message(run_length, size)
       generate_batch_maker(run_length, where_the_inputs_at, args, size)
+    }
+
+    calculate_run_length <- function(what_to_eval) {
+      eval(
+        bquote(NROW(.(what_to_eval))),
+        envir = parent.frame(find_in_stack(what_to_eval))
+      )
     }
 
     loop <- function(next_batch) {
@@ -45,10 +51,9 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       batch_info <- next_batch()
       new_call <- batch_info$new_call
       keys <- batch_info$keys
-      num_batches <- batch_info$num_batches
       run_env <- list2env(list(batch_fn = batch_fn))
       parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
-      p <- progress_bar(num_batches)
+      p <- progress_bar(batch_info$num_batches)
 
       while (!batchman:::is.done(new_call)) {
         if (`verbose_set?`()) { update_progress_bar(p) }
@@ -175,7 +180,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     }
 
     `verbose_set?` <- function() {
-      !identical(getOption("batchman.verbose"), FALSE) && isTRUE(batchman.verbose)
+      # Verbose is true if it is enabled by the option OR
+      # if it is not disabled by the option and is true in argument
+      isTRUE(getOption("batchman.verbose")) || (
+        !identical(getOption("batchman.verbose"), FALSE) &&
+        isTRUE(batchman.verbose)
+      )
     }
 
     progress_bar <- function(num_batches) {
