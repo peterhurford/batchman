@@ -18,13 +18,6 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
   batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = 0) {
 
-    if (is.batched_fn(batch_fn)) return(batch_fn)
-    if (missing(keys)) stop("Keys must be defined.")
-    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
-    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
-      stop("Retry must be an positive integer.")
-    }
-
     default_strategy <- function(...) {
       args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
       keys <- clean_keys(args, keys)
@@ -53,7 +46,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       keys <- batch_info$keys
       run_env <- list2env(list(batch_fn = batch_fn))
       parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
-      p <- progress_bar(batch_info$num_batches)
+      p <- if (`verbose_set?`()) progress_bar(batch_info$num_batches)
 
       while (!batchman:::is.done(new_call)) {
         if (`verbose_set?`()) { update_progress_bar(p) }
@@ -76,7 +69,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       if (!batchman:::is.no_batches(batches)) batches
     }
 
-    make_body_fn <- function() {
+    make_body_fn <- function(splitting_strategy) {
       function(...) {
         next_batch <- splitting_strategy(...)
         loop(next_batch)
@@ -188,21 +181,18 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       )
     }
 
-    progress_bar <- function(num_batches) {
-      if (`verbose_set?`() && suppressMessages(require(R6))) {
-        progress_estimated(num_batches, min_time = 3)
-      }
-    }
 
-    update_progress_bar <- function(bar) {
-      if (!is.null(bar)) bar$tick()$print() else cat(".")
+    if (is.batched_fn(batch_fn)) return(batch_fn)
+    if (missing(keys)) stop("Keys must be defined.")
+    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
+    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
+      stop("Retry must be an positive integer.")
     }
 
     if (isTRUE(trycatch)) batchman:::partial_progress$clear()
-    splitting_strategy <- decide_strategy(splitting_strategy)
 
     batched_fn <- function(...) {
-      body_fn <- make_body_fn()
+      body_fn <- make_body_fn(decide_strategy(splitting_strategy))
       body_fn(...)
     }
 
@@ -210,4 +200,3 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     class(batched_fn) <- c("batched_function", "function")
     batched_fn
 }
-
