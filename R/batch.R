@@ -108,8 +108,9 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
     }
 
     print_batching_message <- function(run_length, size) {
-      if (run_length > size && `verbose_set?`())
+      if (run_length > size && `verbose_set?`()) {
         cat("More than", size, "inputs detected.  Batching...\n")
+      }
     }
 
     generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
