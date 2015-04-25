@@ -143,9 +143,9 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
           if (retry > 0) {
             if (isTRUE(`verbose_set?`())) {
               cat(
-                "Retrying for the ",
+                "Retrying for the",
                 batbelt::as.ordinal(retry),
-                " time.",
+                "time.",
                 "\n"
               )
             }
