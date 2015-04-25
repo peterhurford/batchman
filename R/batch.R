@@ -25,6 +25,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       }
     }
 
+
     loop <- function(next_batch) {
       if (is.null(next_batch)) return(NULL)
       batch_info <- next_batch()
@@ -55,6 +56,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       if (!is.no_batches(batches)) batches
     }
 
+
     find_in_stack <- function(what_to_eval) {
       if (!is(what_to_eval, "name")) return(3)
       stacks_to_search = c(3, 4)
@@ -68,6 +70,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       }
     }
 
+
     `verbose_set?` <- function() {
       # Verbose is true if it is enabled by the option OR
       # if it is not disabled by the option and is true in argument
@@ -76,6 +79,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
         isTRUE(batchman.verbose)
       )
     }
+
 
     iterated_try_catch <- function(expr, new_call, run_env, current_try) {
       tryCatch(
@@ -98,6 +102,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       )
     }
 
+
     raise_error_or_warning <- function(e, retry) {
       if (isTRUE(stop) && retry == 0) {
         if (`verbose_set?`()) cat("\nERROR... HALTING.\n")
@@ -111,10 +116,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       }
     }
 
+
     decide_strategy <- function(splitting_strategy) {
       if (is.null(splitting_strategy)) { default_strategy }
       else { splitting_strategy }
     }
+
 
     default_strategy <- function(...) {
       args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
@@ -130,10 +137,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       generate_batch_maker(run_length, where_the_inputs_at, args, size)
     }
 
+
     clean_keys <- function(args, keys) {
       if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
       keys
     }
+
 
     cache_functions <- function(args, keys) {
       for (key in keys) {
@@ -143,10 +152,12 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       args
     }
 
+
     find_inputs <- function(args, keys) {
       if(identical(keys, "...")) seq(2, length(args))
       else grep(paste0(keys, collapse="|"), names(args))
     }
+
 
     calculate_run_length <- function(what_to_eval) {
       eval(
@@ -155,11 +166,13 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       )
     }
 
+
     print_batching_message <- function(run_length, size) {
       if (run_length > size && `verbose_set?`()) {
         cat("More than", size, "inputs detected.  Batching...\n")
       }
     }
+
 
     generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
       i <- 1
