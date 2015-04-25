@@ -48,7 +48,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
       p <- if (`verbose_set?`()) progress_bar(batch_info$num_batches)
 
-      while (!batchman:::is.done(new_call)) {
+      while (!is.done(new_call)) {
         if (`verbose_set?`()) { update_progress_bar(p) }
 
         batch <- if (isTRUE(trycatch)) {
@@ -60,13 +60,13 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
           )
         } else { eval(new_call, envir = run_env) }
 
-        batches <- if (batchman:::is.no_batches(batches)) batch
+        batches <- if (is.no_batches(batches)) batch
           else combination_strategy(batches, batch)
 
-        if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
+        if (isTRUE(trycatch)) partial_progress$set(batches)
         new_call <- next_batch()$new_call
       }
-      if (!batchman:::is.no_batches(batches)) batches
+      if (!is.no_batches(batches)) batches
     }
 
     make_body_fn <- function(splitting_strategy) {
@@ -117,7 +117,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       second_arg <- quote(x[seq(y, z)])
       keys <- args[where_the_inputs_at]
       function() {
-        if (i > run_length) return(list("new_call" = batchman:::done))
+        if (i > run_length) return(list("new_call" = done))
         for (j in where_the_inputs_at) {
           second_arg[[2]] <- args[[j]]
           second_arg[[3]][[2]] <- i
@@ -189,7 +189,7 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       stop("Retry must be an positive integer.")
     }
 
-    if (isTRUE(trycatch)) batchman:::partial_progress$clear()
+    if (isTRUE(trycatch)) partial_progress$clear()
 
     batched_fn <- function(...) {
       body_fn <- make_body_fn(decide_strategy(splitting_strategy))
