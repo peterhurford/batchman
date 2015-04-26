@@ -30,9 +30,8 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
       if (is.null(next_batch)) return(NULL)
       batch_info <- next_batch()
       new_call <- batch_info$new_call
-      keys <- batch_info$keys
       run_env <- list2env(list(batch_fn = batch_fn))
-      parent.env(run_env) <- parent.frame(find_in_stack(keys[[1]]))
+      parent.env(run_env) <- parent.frame(find_in_stack(batch_info$keys[[1]]))
       p <- if (`verbose_set?`()) progress_bar(batch_info$num_batches)
 
       while (!is.done(new_call)) {

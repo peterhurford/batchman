@@ -1,3 +1,7 @@
+## v1.0.0.9003
+
+* One-line refactor.
+
 ## v1.0.0.9002
 
 * Refactors the codebase for improved readibility.
