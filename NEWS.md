@@ -1,3 +1,7 @@
+## v1.0.0.9004
+
+* Added a test for `combine` with integers.
+
 ## v1.0.0.9003
 
 * One-line refactor.
