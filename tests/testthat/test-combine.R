@@ -8,8 +8,12 @@ test_that("it combines characters via paste0", {
   expect_equal(combine("a", "b", "c"), "abc")
 })
 
-test_that("it combines numeric via c", {
+test_that("it combines numerics via c", {
   expect_equal(combine(1, 2, 3), c(1, 2, 3))
+})
+
+test_that("it combines integers via c", {
+  expect_equal(combine(1L, 2L, 3L), c(1L, 2L, 3L))
 })
 
 test_that("it combines list via c", {
