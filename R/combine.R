@@ -16,10 +16,13 @@ combine_by_list <- function(combination_list) {
   if (length(combination_list) == 1) return(combination_list[[1]])
 
   first <- combination_list[[1]]
-  fn <- if (is.character(first)) paste0                                        # String
-  else if (any((class(first) %in% c("numeric", "list", "logical", "integer", "NULL")))) c   # Vector, List
-  else if (is.data.frame(first)) plyr::rbind.fill                              # Data frame
-  else if (is.matrix(first)) merge                                             # Matrix
+  fn <- if (is.character(first) & length(first) == 1) paste0                   # String
+  else if (class(first) %in% c("character", "numeric", "list", "logical", "integer", "NULL")) c   # Vector, List
+  else if (is.data.frame(first)) {                # Data frame
+    function(...) {
+      do.call(plyr::rbind.fill, Filter(Negate(is.null), list(...)))
+    }
+  } else if (is.matrix(first)) merge              # Matrix
   else stop("Class for combine not recognized.")
   do.call(fn, combination_list)
 }
