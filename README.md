@@ -38,12 +38,7 @@ You can pass both `trycatch = TRUE` and `stop = FALSE` to `batch`, and Batchman 
 
 -
 
-Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use `robust_batch`.  `robust_batch` will run Batchman all the way through, and then attempt to re-run on only the `NA`s (which result from errors).
-
-To do this, call `robust_batch(batch_fn, ...)` where `batched_fn` is the function that you want to use after applying `batch` to it, and `...` are the arguments you wanted to pass to `batched_fn`.
-
-The default amount of max retries is 3, but you can change th is by passing `batchman.retries`.
-
+Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use the `retry` argument, which will retry each batch that errors until either the error goes away or it has been retried `retry` times.
 
 
 ## Using Batchman with Big Data
@@ -106,3 +101,5 @@ Bonus: If you have a list of things to combine, you can call `combine_by_list(li
 ## Other Features
 
 * You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set `bachman.verbose = FALSE` is annoying.
+
+* The same is true with using `options('batchman.verbose' = TRUE)` to turn on batchman's printed messages dynamically.

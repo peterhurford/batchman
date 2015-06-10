@@ -1,6 +1,6 @@
 Package: batchman
 Title: A wrapper for R methods to run them in arbitrary batches.
-Version: 0.3.2
+Version: 1.0.0.9004
 Authors@R: person("Peter", "Hurford", email = "peter.hurford@avantcredit.com", role = c("aut", "cre"))
 Description: Batchman is a wrapper for R methods to run them in arbitary
     batches. Some methods crash when running on large inputs.  Batchman helps
@@ -9,6 +9,7 @@ Depends:
     R (>= 3.0.1)
 Suggests:
     R6,
+    batbelt,
     parallel,
     testthat,
     testthatsomemore,

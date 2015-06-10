@@ -1,3 +1,24 @@
+## v1.0.0.9004
+
+* Added a test for `combine` with integers.
+
+## v1.0.0.9003
+
+* One-line refactor.
+
+## v1.0.0.9002
+
+* Refactors the codebase for improved readibility.
+* Introduces the ability to set `options(batchman.verbose = TRUE)` to dynamically turn on verbosity.
+
+## v1.0.0.9001
+
+* Fixed a bug in the progress bar.
+
+## v1.0.0.9000
+
+* Integrated `robust_batch` into `batch`, using a `retry` parameter.  This change is NOT backwards compatible.
+
 ## v0.3.2
 * `verbose` is now TRUE by default in interactive mode (where `interactive()` evaluates to TRUE), and FALSE by default in non-interactive mode.
 
