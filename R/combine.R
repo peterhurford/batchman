@@ -17,7 +17,7 @@ combine_by_list <- function(combination_list) {
 
   first <- combination_list[[1]]
   fn <- if (is.character(first) & length(first) == 1) paste0                   # String
-  else if (class(first) %in% c("numeric", "list", "logical", "integer", "NULL")) c   # Vector, List
+  else if (class(first) %in% c("character", "numeric", "list", "logical", "integer", "NULL")) c   # Vector, List
   else if (is.data.frame(first)) {                # Data frame
     function(...) {
       do.call(plyr::rbind.fill, Filter(Negate(is.null), list(...)))
