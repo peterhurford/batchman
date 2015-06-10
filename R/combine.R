@@ -23,6 +23,6 @@ combine_by_list <- function(combination_list) {
       do.call(plyr::rbind.fill, Filter(Negate(is.null), list(...)))
     }
   } else if (is.matrix(first)) merge              # Matrix
-  else stop('Class for combine not recognized.')
+  else stop("Class for combine not recognized.")
   do.call(fn, combination_list)
 }
