@@ -1,21 +1,11 @@
-## v1.0.0.9004
+## v1.1.0
 
-* Added a test for `combine` with integers.
-
-## v1.0.0.9003
-
-* One-line refactor.
-
-## v1.0.0.9002
-
-* Refactors the codebase for improved readibility.
 * Introduces the ability to set `options(batchman.verbose = TRUE)` to dynamically turn on verbosity.
-
-## v1.0.0.9001
-
+* Added a test for `combine` with integers.
+* Refactors the codebase for improved readibility.
 * Fixed a bug in the progress bar.
 
-## v1.0.0.9000
+## v1.0.0
 
 * Integrated `robust_batch` into `batch`, using a `retry` parameter.  This change is NOT backwards compatible.
 
