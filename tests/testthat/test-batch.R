@@ -1,4 +1,5 @@
 context("batch")
+library("testthatsomemore")
 
 batched_toupper <- batch(toupper, "x",
   combination_strategy = paste, size = 1, batchman.verbose = FALSE)
@@ -338,5 +339,54 @@ lapply(
         c(1, 1, 1, 1, 1)
       )
     })
+  }
+)
+
+test_that("batch man sleeps when given sleep argument",
+  {
+    env <- list2env(list(called=FALSE))
+    package_stub(
+      "base",
+      "Sys.sleep",
+      function(...) {
+        env$called <- TRUE
+      },
+      {
+        batch_fn <- batch(
+          identity,
+          "x",
+          combination_strategy = c,
+          size = 1,
+          batchman.verbose = FALSE,
+          sleep=30
+        )
+        batch_fn(c(1))
+        expect_true(env$called)
+      }
+    )
+  }
+)
+
+test_that("batch man does not call sleep when sleep argument is not given",
+  {
+    env <- list2env(list(called=FALSE))
+    package_stub(
+      "base",
+      "Sys.sleep",
+      function(...) {
+        env$called <- TRUE
+      },
+      {
+        batch_fn <- batch(
+          identity,
+          "x",
+          combination_strategy = c,
+          size = 1,
+          batchman.verbose = FALSE
+        )
+        batch_fn(c(1))
+        expect_false(env$called)
+      }
+    )
   }
 )

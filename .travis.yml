@@ -5,7 +5,8 @@ before_install:
 - "./travis-tool.sh bootstrap"
 install:
 - "./travis-tool.sh install_deps"
-- "./travis-tool.sh install_r R6 testthatsomemore"
+- "./travis-tool.sh install_r R6"
+- "./travis-tool.sh github_package robertzk/testthatsomemore"
 - "./travis-tool.sh github_package kirillseva/covr"
 - "./travis-tool.sh github_package peterhurford/batbelt"
 script: "./travis-tool.sh run_tests"
