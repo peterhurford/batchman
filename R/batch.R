@@ -25,7 +25,7 @@ batch <- function(
     batchman.verbose = isTRUE(interactive()),
     stop = FALSE,
     retry = 0,
-    sleep=0
+    sleep = 0
 ) {
 
     make_body_fn <- function(splitting_strategy) {
