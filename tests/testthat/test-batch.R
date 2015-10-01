@@ -342,7 +342,7 @@ lapply(
   }
 )
 
-test_that("batch man sleeps when given sleep parameter",
+test_that("batch man sleeps when given sleep argument",
   {
     env <- list2env(list(called=FALSE))
     package_stub(
@@ -367,7 +367,7 @@ test_that("batch man sleeps when given sleep parameter",
   }
 )
 
-test_that("batch man does not call sleep when sleep is not given",
+test_that("batch man does not call sleep when sleep argument is not given",
   {
     env <- list2env(list(called=FALSE))
     package_stub(
