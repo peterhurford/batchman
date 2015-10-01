@@ -1,3 +1,7 @@
+## v1.2.0
+
+* Added a parameter `sleep`, to sleep between batch calls.
+
 ## v1.1.0
 
 * Introduces the ability to set `options(batchman.verbose = TRUE)` to dynamically turn on verbosity.
