@@ -352,7 +352,7 @@ test_that("batch man sleeps when given sleep argument",
         env$called <- TRUE
       },
       {
-        batch_callable <- batch(
+        batch_fn <- batch(
           identity,
           "x",
           combination_strategy = c,
@@ -360,7 +360,7 @@ test_that("batch man sleeps when given sleep argument",
           batchman.verbose = FALSE,
           sleep=30
         )
-        batch_callable(c(1))
+        batch_fn(c(1))
         expect_true(env$called)
       }
     )
@@ -377,14 +377,14 @@ test_that("batch man does not call sleep when sleep argument is not given",
         env$called <- TRUE
       },
       {
-        batch_callable <- batch(
+        batch_fn <- batch(
           identity,
           "x",
           combination_strategy = c,
           size = 1,
           batchman.verbose = FALSE
         )
-        batch_callable(c(1))
+        batch_fn(c(1))
         expect_false(env$called)
       }
     )
