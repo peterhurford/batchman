@@ -14,9 +14,18 @@
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @param retry integer. The number of times to retry on error. 0 for no retrying.
 #' @export
-batch <- function(batch_fn, keys, splitting_strategy = NULL,
-  combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
-  batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = 0) {
+batch <- function(
+    batch_fn,
+    keys,
+    splitting_strategy = NULL,
+    combination_strategy = batchman::combine,
+    size = 50,
+    trycatch = FALSE,
+    batchman.verbose = isTRUE(interactive()),
+    stop = FALSE,
+    retry = 0,
+    sleep=0
+) {
 
     make_body_fn <- function(splitting_strategy) {
       function(...) {
@@ -45,6 +54,8 @@ batch <- function(batch_fn, keys, splitting_strategy = NULL,
             retry
           )
         } else { eval(new_call, envir = run_env) }
+
+        if (sleep > 0) { Sys.sleep(sleep) }
 
         batches <- if (is.no_batches(batches)) batch
           else combination_strategy(batches, batch)
