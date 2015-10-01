@@ -13,6 +13,7 @@
 #' @param batchman.verbose logical. Whether or not to announce progress by printing dots.
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @param retry integer. The number of times to retry on error. 0 for no retrying.
+#' @param sleep integer. Time in seconds to sleep between batches.
 #' @export
 batch <- function(
     batch_fn,
