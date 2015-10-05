@@ -7,7 +7,7 @@
 batch(batch_fn, keys, splitting_strategy = NULL,
   combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
   batchman.verbose = isTRUE(interactive()), stop = FALSE, retry = 0,
-  sleep = 0)
+  sleep = 0, ncores = parallel::detectCores(), parallel = FALSE)
 }
 \arguments{
 \item{batch_fn}{function. The method to batch over.}
@@ -33,6 +33,11 @@ Can be used to store and retrieve partial progress on an error.}
 \item{retry}{integer. The number of times to retry on error. 0 for no retrying.}
 
 \item{sleep}{integer. Time in seconds to sleep between batches.}
+
+\item{ncores}{integer. Number of cores to use if parallel is set to true. Notice that it doesn't
+work on windows.}
+
+\item{parallel}{logical. Use parallel::mclapply to execute your batches. Incompatible with retry.}
 }
 \description{
 batch maps a function to a batched version of that function.

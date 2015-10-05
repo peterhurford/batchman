@@ -14,6 +14,9 @@
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @param retry integer. The number of times to retry on error. 0 for no retrying.
 #' @param sleep integer. Time in seconds to sleep between batches.
+#' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry.
+#' @param ncores integer. Number of cores to use if parallel is set to true. Notice that it doesn't
+#'   work on windows.
 #' @export
 batch <- function(
     batch_fn,
@@ -25,8 +28,13 @@ batch <- function(
     batchman.verbose = isTRUE(interactive()),
     stop = FALSE,
     retry = 0,
-    sleep = 0
+    sleep = 0,
+    ncores = parallel::detectCores(),
+    parallel = FALSE
 ) {
+    if(isTRUE(parallel) && isTRUE(trycatch)) {
+      stop('Please choose speed or robustness. (parallel or retry. cannot have both)')
+    }
 
     make_body_fn <- function(splitting_strategy) {
       function(...) {
@@ -38,31 +46,47 @@ batch <- function(
 
     loop <- function(next_batch) {
       if (is.null(next_batch)) return(NULL)
-      batch_info <- next_batch()
-      new_call <- batch_info$new_call
+      ncores <- if (isTRUE(parallel)) ncores else 1
+      batch_info <- next_batch(ncores)
+      new_call <- lapply(batch_info, `[[`, 'new_call')
       run_env <- list2env(list(batch_fn = batch_fn))
-      parent.env(run_env) <- parent.frame(find_in_stack(batch_info$keys[[1]]))
-      p <- if (`verbose_set?`()) progress_bar(batch_info$num_batches)
+      parent.env(run_env) <- parent.frame(find_in_stack(batch_info[[1]]$keys[[1]]))
+      p <- if (`verbose_set?`()) progress_bar(ceiling(batch_info[[1]]$num_batches/ncores))
+      apply_method <- if (isTRUE(parallel)) { parallel::mclapply } else { lapply }
 
-      while (!is.done(new_call)) {
+      while(!is.done(new_call[[1]])) {
+        temp_batches <- apply_method(new_call, function(newcall, ...) {
+          if (is.done(newcall)) return(structure(NULL, emptyrun = TRUE))
+          if (isTRUE(trycatch) && !isTRUE(parallel)) {
+            iterated_try_catch(
+              eval(newcall, envir = run_env),
+              newcall,
+              run_env,
+              retry
+            )
+          } else { eval(newcall, envir = run_env) }
+        }, mc.cores = ncores, mc.allow.recursive = FALSE, mc.preschedule = TRUE)
         if (`verbose_set?`()) { update_progress_bar(p) }
-
-        batch <- if (isTRUE(trycatch)) {
-          iterated_try_catch(
-            eval(new_call, envir = run_env),
-            new_call,
-            run_env,
-            retry
-          )
-        } else { eval(new_call, envir = run_env) }
-
         if (sleep > 0) { Sys.sleep(sleep) }
-
-        batches <- if (is.no_batches(batches)) batch
-          else combination_strategy(batches, batch)
+        ## Parallel execution requires some special error handling
+        errors <- vapply(temp_batches, function(x) is(x, 'try-error'), logical(1))
+        if (any(errors)) {
+          ## Looks like a batch has failed!
+          ## Let's warn or stop
+          if (isTRUE(stop)) {
+            stop(attr(temp_batches[errors][[1]], 'condition'))
+          } else {
+            warning(as.character(attr(temp_batches[errors][[1]], 'condition')))
+            temp_batches[errors] <- list(NULL)
+          }
+        }
+        temp_batches  <- temp_batches[vapply(temp_batches, Negate(is.emptyrun), logical(1))]
+        current_batch <- Reduce(combination_strategy, temp_batches)
+        batches <- if (is.no_batches(batches)) current_batch
+          else combination_strategy(batches, current_batch)
 
         if (isTRUE(trycatch)) partial_progress$set(batches)
-        new_call <- next_batch()$new_call
+        new_call <- lapply(next_batch(ncores), `[[`, 'new_call')
       }
       if (!is.no_batches(batches)) batches
     }
@@ -189,7 +213,7 @@ batch <- function(
       i <- 1
       second_arg <- quote(x[seq(y, z)])
       keys <- args[where_the_inputs_at]
-      function() {
+      make_batch_call <- function() {
         if (i > run_length) return(list("new_call" = done))
         for (j in where_the_inputs_at) {
           second_arg[[2]] <- args[[j]]
@@ -203,6 +227,11 @@ batch <- function(
           "keys" = keys,
           "num_batches" = ceiling(run_length / size)
         )
+      }
+      function(ncores) {
+        lapply(1:ncores, function(core_idx) {
+          make_batch_call()
+        })
       }
     }
 

@@ -1,4 +1,4 @@
-![Batchman](http://i.imgur.com/63jNVwY.png) 
+![Batchman](http://i.imgur.com/63jNVwY.png)
 
 ## Batchman [![Build Status](https://travis-ci.org/peterhurford/batchman.svg?branch=master)](https://travis-ci.org/peterhurford/batchman?branch=master) [![Coverage Status](https://img.shields.io/coveralls/peterhurford/batchman.svg)](https://coveralls.io/r/peterhurford/batchman) ![Release Tag](https://img.shields.io/github/tag/peterhurford/batchman.svg)
 
@@ -40,6 +40,13 @@ You can pass both `trycatch = TRUE` and `stop = FALSE` to `batch`, and Batchman 
 
 Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use the `retry` argument, which will retry each batch that errors until either the error goes away or it has been retried `retry` times.
 
+## Using Batchman to parallelize your work
+
+If you set `parallel = TRUE` batchman will use `parallel::mclapply` to run the
+batches. This can greatly speed up applications that have a fixed time penalty,
+like network API calls. Beware that you cannot use `parallel` and `trycatch`
+together due to ~~the laziness of developers~~ complex mechanics of parallel
+code execution in R.
 
 ## Using Batchman with Big Data
 
