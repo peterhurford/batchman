@@ -14,7 +14,9 @@
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @param retry integer. The number of times to retry on error. 0 for no retrying.
 #' @param sleep integer. Time in seconds to sleep between batches.
-#' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry
+#' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry.
+#' @param ncores integer. Number of cores to use if parallel is set to true. Notice that it doesn't
+#'   work on windows.
 #' @export
 batch <- function(
     batch_fn,
