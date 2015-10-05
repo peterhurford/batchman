@@ -40,16 +40,17 @@ batch <- function(
 
     loop <- function(next_batch) {
       if (is.null(next_batch)) return(NULL)
+      ncores <- if (isTRUE(parallel)) ncores else 1
       batch_info <- next_batch(ncores)
       new_call <- lapply(batch_info, `[[`, 'new_call')
       run_env <- list2env(list(batch_fn = batch_fn))
       parent.env(run_env) <- parent.frame(find_in_stack(batch_info[[1]]$keys[[1]]))
-      p <- if (`verbose_set?`()) progress_bar(batch_info[[1]]$num_batches)
+      p <- if (`verbose_set?`()) progress_bar(ceiling(batch_info[[1]]$num_batches/ncores))
+      apply_method <- if (isTRUE(parallel)) { parallel::mclapply } else { lapply }
 
       while(!is.done(new_call[[1]])) {
-        temp_batches <- lapply(new_call, function(newcall) {
+        temp_batches <- apply_method(new_call, function(newcall, ...) {
           if (is.done(newcall)) return(NULL)
-          if (`verbose_set?`()) { update_progress_bar(p) }
           batch <- if (isTRUE(trycatch)) {
             iterated_try_catch(
               eval(newcall, envir = run_env),
@@ -58,15 +59,16 @@ batch <- function(
               retry
             )
           } else { eval(newcall, envir = run_env) }
-        })#, mc.cores = ncores, mc.allow.recursive = FALSE)
-        browser()
-      }
-      if (sleep > 0) { Sys.sleep(sleep) }
-      batches <- if (is.no_batches(batches)) batch
-        else combination_strategy(batches, batch)
+        }, mc.cores = ncores, mc.allow.recursive = FALSE)
+        if (`verbose_set?`()) { update_progress_bar(p) }
+        if (sleep > 0) { Sys.sleep(sleep) }
+        current_batch <- Reduce(combination_strategy, temp_batches)
+        batches <- if (is.no_batches(batches)) current_batch
+          else combination_strategy(batches, current_batch)
 
-      if (isTRUE(trycatch)) partial_progress$set(batches)
-        new_call <- next_batch(ncores)$new_call
+        if (isTRUE(trycatch)) partial_progress$set(batches)
+        new_call <- lapply(next_batch(ncores), `[[`, 'new_call')
+      }
       if (!is.no_batches(batches)) batches
     }
 
