@@ -25,7 +25,9 @@ batch <- function(
     batchman.verbose = isTRUE(interactive()),
     stop = FALSE,
     retry = 0,
-    sleep = 0
+    sleep = 0,
+    ncores = parallel::detectCores(),
+    parallel = TRUE
 ) {
 
     make_body_fn <- function(splitting_strategy) {
@@ -38,32 +40,33 @@ batch <- function(
 
     loop <- function(next_batch) {
       if (is.null(next_batch)) return(NULL)
-      batch_info <- next_batch()
-      new_call <- batch_info$new_call
+      batch_info <- next_batch(ncores)
+      new_call <- lapply(batch_info, `[[`, 'new_call')
       run_env <- list2env(list(batch_fn = batch_fn))
-      parent.env(run_env) <- parent.frame(find_in_stack(batch_info$keys[[1]]))
-      p <- if (`verbose_set?`()) progress_bar(batch_info$num_batches)
+      parent.env(run_env) <- parent.frame(find_in_stack(batch_info[[1]]$keys[[1]]))
+      p <- if (`verbose_set?`()) progress_bar(batch_info[[1]]$num_batches)
 
-      while (!is.done(new_call)) {
-        if (`verbose_set?`()) { update_progress_bar(p) }
-
-        batch <- if (isTRUE(trycatch)) {
-          iterated_try_catch(
-            eval(new_call, envir = run_env),
-            new_call,
-            run_env,
-            retry
-          )
-        } else { eval(new_call, envir = run_env) }
-
-        if (sleep > 0) { Sys.sleep(sleep) }
-
-        batches <- if (is.no_batches(batches)) batch
-          else combination_strategy(batches, batch)
-
-        if (isTRUE(trycatch)) partial_progress$set(batches)
-        new_call <- next_batch()$new_call
+      while(!is.done(new_call[[1]])) {
+        temp_batches <- lapply(new_call, function(newcall) {
+          if (is.done(newcall)) return(NULL)
+          if (`verbose_set?`()) { update_progress_bar(p) }
+          batch <- if (isTRUE(trycatch)) {
+            iterated_try_catch(
+              eval(newcall, envir = run_env),
+              newcall,
+              run_env,
+              retry
+            )
+          } else { eval(newcall, envir = run_env) }
+        })#, mc.cores = ncores, mc.allow.recursive = FALSE)
+        browser()
       }
+      if (sleep > 0) { Sys.sleep(sleep) }
+      batches <- if (is.no_batches(batches)) batch
+        else combination_strategy(batches, batch)
+
+      if (isTRUE(trycatch)) partial_progress$set(batches)
+        new_call <- next_batch(ncores)$new_call
       if (!is.no_batches(batches)) batches
     }
 
@@ -189,7 +192,7 @@ batch <- function(
       i <- 1
       second_arg <- quote(x[seq(y, z)])
       keys <- args[where_the_inputs_at]
-      function() {
+      make_batch_call <- function() {
         if (i > run_length) return(list("new_call" = done))
         for (j in where_the_inputs_at) {
           second_arg[[2]] <- args[[j]]
@@ -203,6 +206,11 @@ batch <- function(
           "keys" = keys,
           "num_batches" = ceiling(run_length / size)
         )
+      }
+      function(ncores) {
+        lapply(1:ncores, function(core_idx) {
+          make_batch_call()
+        })
       }
     }
 
