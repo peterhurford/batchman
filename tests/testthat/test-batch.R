@@ -17,7 +17,7 @@ check_for_batch_length_of <- function(len) {
   expect_equal(10, batch_length)
   batch_length <- 0
   batch_run <- batch(batch_check, "x",
-    combination_strategy = paste0, size = len, batchman.verbose = FALSE
+    combination_strategy = paste0, size = len, batchman.verbose = FALSE, parallel = FALSE
   )
   batch_run(seq(1:10))
   expect_equal(len, batch_length)
@@ -68,42 +68,45 @@ test_that("it can batch twice by two keys", {
 })
 
 test_that("it can batch by two keys and include two nonbatched params", {
-  record_last_arg <- list()
   add_first_and_second_arg <- function(w, x, y, z) {
-    record_last_arg <<- z
-    w + x
+    (w + x) * z[1]
   }
   batched_add <- batch(add_first_and_second_arg, c("w", "x"),
     combination_strategy = c, size = 1, batchman.verbose = FALSE)
   o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9), c(10, 11, 12))
-  expect_equal(c(10, 11, 12), record_last_arg)
-  expect_equal(c(5, 7, 9), o)
+  expect_equal(c(50, 70, 90), o)
+  batched_add <- batch(add_first_and_second_arg, c("w", "x"),
+    combination_strategy = c, size = 1, batchman.verbose = FALSE, parallel = FALSE)
+  o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9), c(10, 11, 12))
+  expect_equal(c(50, 70, 90), o)
 })
 
 test_that("it can batch by two keys and include a nonbatched param as the first param", {
   add_second_and_third_arg <- function(x, y, z) {
-    record_first_arg <<- x
-    y + z
+    (y + z) * x[1]
   }
   batched_add <- batch(add_second_and_third_arg, c("y", "z"),
     combination_strategy = c, size = 1, batchman.verbose = FALSE)
   o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9))
-  expect_equal(c(1, 2, 3), record_first_arg)
+  expect_equal(c(11, 13, 15), o)
+  batched_add <- batch(add_second_and_third_arg, c("y", "z"),
+    combination_strategy = c, size = 1, batchman.verbose = FALSE, parallel = FALSE)
+  o <- batched_add(c(1, 2, 3), c(4, 5, 6), c(7, 8, 9))
   expect_equal(c(11, 13, 15), o)
 })
 
 test_that("it can batch by two keys, surrounded by nonbatched params", {
   add_middle_args <- function(w, x, y, z) {
-    record_first_arg <<- w
-    record_last_arg <<- z
-    x + y
+    (x + y) * (z[1] + w[1])
   }
   batched_add <- batch(add_middle_args, c("x", "y"),
     combination_strategy = c, size = 1, batchman.verbose = FALSE)
   o <- batched_add(c(10, 11, 12), c(13, 14, 15), c(16, 17, 18), c(19, 20, 21))
-  expect_equal(c(10, 11, 12), record_first_arg)
-  expect_equal(c(19, 20, 21), record_last_arg)
-  expect_equal(c(29, 31, 33), o)
+  expect_equal(c(841, 899, 957), o)
+  batched_add <- batch(add_middle_args, c("x", "y"),
+    combination_strategy = c, size = 1, batchman.verbose = FALSE, parallel = FALSE)
+  o <- batched_add(c(10, 11, 12), c(13, 14, 15), c(16, 17, 18), c(19, 20, 21))
+  expect_equal(c(841, 899, 957), o)
 })
 
 test_that("it can batch by an existant key and a nonexistant key", {
@@ -223,7 +226,7 @@ test_that("it must be more efficient to batch than to execute an O(x^2) function
   # Simulate an O(x^2) function
   sleep_square <- function(input) Sys.sleep(length(input) ^ 2 * 10^-11)
   batched_sleep_square <- batch(sleep_square, "input",
-    combination_strategy = c, size = 2000, batchman.verbose = FALSE)
+    combination_strategy = c, size = 2000, batchman.verbose = FALSE, parallel = FALSE)
   require(microbenchmark)
   speeds <- summary(microbenchmark(times = 1,
     sleep_square(seq(1:10^5)),
@@ -231,6 +234,22 @@ test_that("it must be more efficient to batch than to execute an O(x^2) function
   ))
   expect_true(speeds$median[[2]] < speeds$median[[1]])
 })
+
+test_that("For expensive functions it's faster to paralellize though", {
+  # Simulate an constantly slow function
+  sleep_square <- function(input) { Sys.sleep(1); input*2 }
+  batched_sleep_square_p <- batch(sleep_square, "input",
+    combination_strategy = c, size = 5, batchman.verbose = FALSE, parallel = TRUE)
+  batched_sleep_square_l <- batch(sleep_square, "input",
+    combination_strategy = c, size = 5, batchman.verbose = FALSE, parallel = FALSE)
+  require(microbenchmark)
+  speeds <- summary(microbenchmark(times = 1,
+    batched_sleep_square_l(seq(1:20)),
+    batched_sleep_square_p(seq(1:20))
+  ))
+  expect_true(speeds$median[[2]] < speeds$median[[1]])
+})
+
 
 test_that("it keeps processing with an error if trycatch is TRUE and stop is FALSE", {
   b_fn <- get_expect_error_fn(trycatch = TRUE, stop = FALSE)

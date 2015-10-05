@@ -47,11 +47,12 @@ batch <- function(
       parent.env(run_env) <- parent.frame(find_in_stack(batch_info[[1]]$keys[[1]]))
       p <- if (`verbose_set?`()) progress_bar(ceiling(batch_info[[1]]$num_batches/ncores))
       apply_method <- if (isTRUE(parallel)) { parallel::mclapply } else { lapply }
+      is.emptyrun <- function(x) identical(x, structure(NULL, emptyrun = TRUE))
 
       while(!is.done(new_call[[1]])) {
         temp_batches <- apply_method(new_call, function(newcall, ...) {
-          if (is.done(newcall)) return(NULL)
-          batch <- if (isTRUE(trycatch)) {
+          if (is.done(newcall)) return(structure(NULL, emptyrun = TRUE))
+          if (isTRUE(trycatch)) {
             iterated_try_catch(
               eval(newcall, envir = run_env),
               newcall,
@@ -62,6 +63,7 @@ batch <- function(
         }, mc.cores = ncores, mc.allow.recursive = FALSE)
         if (`verbose_set?`()) { update_progress_bar(p) }
         if (sleep > 0) { Sys.sleep(sleep) }
+        temp_batches  <- temp_batches[vapply(temp_batches, Negate(is.emptyrun), logical(1))]
         current_batch <- Reduce(combination_strategy, temp_batches)
         batches <- if (is.no_batches(batches)) current_batch
           else combination_strategy(batches, current_batch)
