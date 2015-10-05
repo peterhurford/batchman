@@ -237,6 +237,7 @@ test_that("it must be more efficient to batch than to execute an O(x^2) function
 
 test_that("For expensive functions it's faster to paralellize though", {
   # Simulate an constantly slow function
+  skip_on_travis()
   sleep_square <- function(input) { Sys.sleep(1); input * 2 }
   batched_sleep_square_p <- batch(sleep_square, "input",
     combination_strategy = c, size = 5, batchman.verbose = FALSE, parallel = TRUE)
