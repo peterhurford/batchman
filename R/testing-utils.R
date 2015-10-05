@@ -33,7 +33,7 @@ fncaller <- function(list_fn) list_fn[[1]]()
 
 fn1 <- function() 1
 
-get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0, parallel = TRUE) {
+get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0, parallel = FALSE) {
   batchman:::partial_progress$clear()
   batch(
     fncaller,

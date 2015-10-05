@@ -14,6 +14,7 @@
 #' @param stop logical. Whether trycatch should stop if an error is raised.
 #' @param retry integer. The number of times to retry on error. 0 for no retrying.
 #' @param sleep integer. Time in seconds to sleep between batches.
+#' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry
 #' @export
 batch <- function(
     batch_fn,
@@ -27,8 +28,11 @@ batch <- function(
     retry = 0,
     sleep = 0,
     ncores = parallel::detectCores(),
-    parallel = TRUE
+    parallel = FALSE
 ) {
+    if(isTRUE(parallel) && isTRUE(trycatch)) {
+      stop('Please choose speed or robustness. (parallel or retry. cannot have both)')
+    }
 
     make_body_fn <- function(splitting_strategy) {
       function(...) {
@@ -47,7 +51,6 @@ batch <- function(
       parent.env(run_env) <- parent.frame(find_in_stack(batch_info[[1]]$keys[[1]]))
       p <- if (`verbose_set?`()) progress_bar(ceiling(batch_info[[1]]$num_batches/ncores))
       apply_method <- if (isTRUE(parallel)) { parallel::mclapply } else { lapply }
-      is.emptyrun <- function(x) identical(x, structure(NULL, emptyrun = TRUE))
 
       while(!is.done(new_call[[1]])) {
         temp_batches <- apply_method(new_call, function(newcall, ...) {
@@ -139,7 +142,6 @@ batch <- function(
         if(exists("batches") && `verbose_set?`()) {
           cat("Partial progress saved to batchman::progress()\n")
         }
-        browser()
         stop(e$message)
       } else {
         if (grepl("Bad keys - no batched key", e$message)) stop(e$message)
