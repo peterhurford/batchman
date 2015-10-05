@@ -1,6 +1,6 @@
 rbomb <- local({
   .defused <- FALSE  # Whether or not it will explode when evaluated
-  .stubborness <- 1  # How many defuses it takes to 
+  .stubborness <- 1  # How many defuses it takes to
   structure(list(
     class = "rbomb",
     is.defused = function() .defused,
@@ -33,7 +33,7 @@ fncaller <- function(list_fn) list_fn[[1]]()
 
 fn1 <- function() 1
 
-get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0) {
+get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0, parallel = TRUE) {
   batchman:::partial_progress$clear()
   batch(
     fncaller,
@@ -43,7 +43,8 @@ get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0) {
     batchman.verbose = FALSE,
     trycatch = trycatch,
     stop = stop,
-    retry = retry
+    retry = retry,
+    parallel = parallel
   )
 }
 

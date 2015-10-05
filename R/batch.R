@@ -52,7 +52,7 @@ batch <- function(
       while(!is.done(new_call[[1]])) {
         temp_batches <- apply_method(new_call, function(newcall, ...) {
           if (is.done(newcall)) return(structure(NULL, emptyrun = TRUE))
-          if (isTRUE(trycatch)) {
+          if (isTRUE(trycatch) && !isTRUE(parallel)) {
             iterated_try_catch(
               eval(newcall, envir = run_env),
               newcall,
@@ -60,9 +60,21 @@ batch <- function(
               retry
             )
           } else { eval(newcall, envir = run_env) }
-        }, mc.cores = ncores, mc.allow.recursive = FALSE)
+        }, mc.cores = ncores, mc.allow.recursive = FALSE, mc.preschedule = TRUE)
         if (`verbose_set?`()) { update_progress_bar(p) }
         if (sleep > 0) { Sys.sleep(sleep) }
+        ## Parallel execution requires some special error handling
+        errors <- vapply(temp_batches, function(x) is(x, 'try-error'), logical(1))
+        if (any(errors)) {
+          ## Looks like a batch has failed!
+          ## Let's warn or stop
+          if (isTRUE(stop)) {
+            stop(attr(temp_batches[errors][[1]], 'condition'))
+          } else {
+            warning(as.character(attr(temp_batches[errors][[1]], 'condition')))
+            temp_batches[errors] <- list(NULL)
+          }
+        }
         temp_batches  <- temp_batches[vapply(temp_batches, Negate(is.emptyrun), logical(1))]
         current_batch <- Reduce(combination_strategy, temp_batches)
         batches <- if (is.no_batches(batches)) current_batch
@@ -127,6 +139,7 @@ batch <- function(
         if(exists("batches") && `verbose_set?`()) {
           cat("Partial progress saved to batchman::progress()\n")
         }
+        browser()
         stop(e$message)
       } else {
         if (grepl("Bad keys - no batched key", e$message)) stop(e$message)
