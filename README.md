@@ -30,7 +30,9 @@ devtools::install_github('peterhurford', 'batchman')
 
 
 
-## Using Batchman with Error-Prone Sources
+## Using Batchman
+
+#### Using Batchman with Error-Prone Sources
 
 Sometimes you might be batching functions that can be error-prone, like an API call.  When initializing the batching via the `batch` function, choose to pass `trycatch = TRUE` to `batch` to run Batchman in a `tryCatch` block.  If this is done, batchman will stop upon an error, but store all the progress so far, which you can retrieve with `batchman::progress()`.
 
@@ -40,7 +42,7 @@ You can pass both `trycatch = TRUE` and `stop = FALSE` to `batch`, and Batchman 
 
 Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use the `retry` argument, which will retry each batch that errors until either the error goes away or it has been retried `retry` times.
 
-## Using Batchman to parallelize your work
+## ## Using Batchman to Parallelize Your Work
 
 If you set `parallel = TRUE` batchman will use `parallel::mclapply` to run the
 batches. This can greatly speed up applications that have a fixed time penalty,
@@ -48,7 +50,7 @@ like network API calls. Beware that you cannot use `parallel` and `trycatch`
 together due to ~~the laziness of developers~~ complex mechanics of parallel
 code execution in R.
 
-## Using Batchman with Big Data
+#### Using Batchman with Big Data
 
 Batchman could be a useful tool for handling big data in R.  Since batchman allows for a custom `combination_strategy`, you could do something other than combining the items in R memory (which may not be possible with the size of your data).  For example, you might make a method like:
 
