@@ -38,17 +38,17 @@ Sometimes you might be batching functions that can be error-prone, like an API c
 
 You can pass both `trycatch = TRUE` and `stop = FALSE` to `batch`, and Batchman will keep going even when encountering an error.  Blocks that result in an error will be converted to `NA`.
 
--
-
 Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use the `retry` argument, which will retry each batch that errors until either the error goes away or it has been retried `retry` times.
 
-## ## Using Batchman to Parallelize Your Work
+
+#### Using Batchman to Parallelize Your Work
 
 If you set `parallel = TRUE` batchman will use `parallel::mclapply` to run the
 batches. This can greatly speed up applications that have a fixed time penalty,
 like network API calls. Beware that you cannot use `parallel` and `trycatch`
 together due to ~~the laziness of developers~~ complex mechanics of parallel
 code execution in R.
+
 
 #### Using Batchman with Big Data
 
