@@ -2,9 +2,12 @@
 % Please edit documentation in R/utils.R
 \name{get_before_fn}
 \alias{get_before_fn}
+\alias{unbatched}
 \title{A helper method to get the pre-batched function of a batched function.}
 \usage{
 get_before_fn(fn)
+
+unbatched(fn)
 }
 \arguments{
 \item{fn}{function. The batched function to look for.}

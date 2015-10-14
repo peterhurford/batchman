@@ -23,6 +23,10 @@ is.batched_fn <- function(fn) isTRUE(attr(fn, "batched"))
 #' @export
 get_before_fn <- function(fn) environment(fn)$batch_fn
 
+#' @rdname get_before_fn
+#' @export
+unbatched <- get_before_fn
+
 #' Print batched functions as they once were.
 #' @param fn function. The function to print.
 #' @export
