@@ -1,3 +1,7 @@
+## v1.3.0.9001
+
+* Aliases `unbatched` to `get_before_fn`.
+
 ## v1.3.0.9000
 
 * Added a parameter `parallel`, to execute batches in parallel.
