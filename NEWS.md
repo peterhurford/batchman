@@ -1,3 +1,7 @@
+## v1.3.0.9002
+
+* Removes the batbelt dependency.
+
 ## v1.3.0.9001
 
 * Aliases `unbatched` to `get_before_fn`.
