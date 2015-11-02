@@ -125,7 +125,7 @@ batch <- function(
             if (isTRUE(`verbose_set?`())) {
               cat(
                 "Retrying for the",
-                batbelt::as.ordinal(retry - current_try + 1),
+                as.ordinal(retry - current_try + 1),
                 "time.",
                 "\n"
               )
