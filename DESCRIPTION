@@ -9,7 +9,6 @@ Depends:
     R (>= 3.0.1)
 Suggests:
     R6,
-    batbelt,
     parallel,
     testthat,
     testthatsomemore,
