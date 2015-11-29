@@ -1,10 +1,23 @@
+## `batch` is where all the action happens.  `batch` is a functional -- it takes a function as
+## an argument (among many other arguments) and returns a function.  The returned function is
+## a modified version of the original function that will process inputs in batch.
+
 #' batch maps a function to a batched version of that function.
 #'
 #' @param batch_fn function. The method to batch over.
+## We need to know what keys will be the ones that will be batched versus the ones that
+## are not to be batched.  For example, for `mean`, we would want to batch the vector of numbers
+## but we would not like to batch along the optional `na.rm` argument.
 #' @param keys vector. The names of the keys within the function to batch.
 #'   Can be "..." if one is batching a splat function with no keys.
+## A splitting strategy is a methodology to split up the inputs.  Right now the default one
+## that comes with batchman seems to handle every scenario well enough, and I've never come up
+## with a reason to roll a custom splitting_strategy.  But I leave it to you to decide!
 #' @param splitting_strategy function. The strategy used to split up inputs.
 #'   Leave NULL to use the versatile default splitting strategy.
+## The combination strategy is about how to recombine the inputs once they are processed in
+## batch.  The default one will handle pretty much anything, but the trade-off is that doing so
+## is slow.  So it's a good idea to pass a more specific combination_strategy if you can.
 #' @param combination_strategy function. The strategy used to recombine batches.
 #'   Defaults to class-agnostic combination.
 #' @param size numeric. The size of the packets. Default 50.
@@ -17,6 +30,11 @@
 #' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry.
 #' @param ncores integer. Number of cores to use if parallel is set to true. Notice that it doesn't
 #'   work on windows.
+#' @return a batched version of the passed function.
+#' @examples
+#'   batched_identity <- batch(identity, "x", combination_strategy = c, size = 10)
+#'   batched_identity(seq(100))
+#'   # Does identity, but in batches of 10.
 #' @export
 batch <- function(
     batch_fn,
@@ -32,17 +50,127 @@ batch <- function(
     ncores = parallel::detectCores(),
     parallel = FALSE
 ) {
+    ## Parallellized code will behave oddly if some of the code stops for an error, so it's best not to do it.
     if(isTRUE(parallel) && isTRUE(trycatch)) {
       stop('Please choose speed or robustness. (parallel or retry. cannot have both)')
     }
+    if (is.batched_fn(batch_fn)) return(batch_fn)
+    if (missing(keys)) stop("Keys must be defined.")
+    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
+    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
+      stop("Retry must be an positive integer.")
+    }
+    ## Batchman can store partial progress on runs if it stops unexpectedly.
+    ## We should clear it on another run where partial progress is desired.
+    if (isTRUE(trycatch)) partial_progress$clear()
 
-    make_body_fn <- function(splitting_strategy) {
+    ## The goal is to swap the function with a batched version of itself.
+    batched_fn <- function(...) {
+      ## So we create a batched function.
+      batched_fn <- make_batched_fn(decide_strategy(splitting_strategy))
+      ## And then call it with the arguments that would have been passed
+      ## to the non-batched function.
+      batched_fn(...)
+    }
+    attr(batched_fn, "batched") <- TRUE
+    class(batched_fn) <- c("batched_function", "function")
+
+
+    ## The rest are just the helper functions.
+    make_batched_fn <- function(splitting_strategy) {
       function(...) {
+        ## The splitting strategy is how inputs are borken up into batches.
+        ## Each call of the splitting strategy will return the next batch.
+        ## So the first time it is called you get the first batch, the second
+        ## time it is called you get the second batch, until you get a
+        ## marker that there are no batches remaining.
         next_batch <- splitting_strategy(...)
+        ## Once we have the next batch, we pass it into the loop.
+        ## The loop is a giant while loop that processes all the batches.
         loop(next_batch)
       }
     }
 
+    ## The splitting strategy will either be the default strategy or the
+    ## custom strategy passed by the user.
+    decide_strategy <- function(splitting_strategy) {
+      if (is.null(splitting_strategy)) { default_strategy }
+      else { splitting_strategy }
+    }
+
+    default_strategy <- function(...) {
+      ## We use `match.call` to extract all the arguments that are being passed to
+      ## the function we want to batch.
+      args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
+      ## We then look at the keys the user passed in saying they want to batch
+      ## and the args that the function actually uses, and check that the keys
+      ## are in the args.
+      keys <- match_keys_with_args(args, keys)
+      ## Sometimes the args being passed are function calls. If so, they will be
+      ## evaluated during every batch, which is time intensive. To avoid this,
+      ## we pre-evaluate them in advance, keeping the results in an in-memory cache.
+      args <- cache_args_that_are_functions(args, keys)
+      ## We now want to know the positions of the keys within the list of args.
+      where_the_keys_at <- find_keys_within_args(args, keys)
+      if (length(where_the_keys_at) == 0) return(NULL)
+      what_to_eval <- args[[where_the_keys_at[[1]]]]
+      if (is.null(what_to_eval)) return(NULL)
+      run_length <- calculate_run_length(what_to_eval)
+      print_batching_message(run_length, size)
+      generate_batch_maker(run_length, where_the_keys_at, args, size)
+    }
+
+    match_keys_with_args <- function(args, keys) {
+      if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
+      if (length(keys) == 0) stop("Bad keys - no batched key matches keys passed.")
+      keys
+    }
+
+    cache_args_that_are_functions <- function(args, keys) {
+      for (key in keys) {
+        if (is.call(args[[key]]))
+          args[[key]] <- eval(args[[key]], envir = parent.frame(find_in_stack(key)+1))
+      }
+      args
+    }
+
+    find_keys_within_args <- function(args, keys) {
+      if(identical(keys, "...")) seq(2, length(args))
+      else grep(paste0(keys, collapse="|"), names(args))
+    }
+
+    calculate_run_length <- function(what_to_eval) {
+      eval(
+        bquote(NROW(.(what_to_eval))),
+        envir = parent.frame(find_in_stack(what_to_eval))
+      )
+    }
+
+    generate_batch_maker <- function(run_length, where_the_keys_at, args, size) {
+      i <- 1
+      second_arg <- quote(x[seq(y, z)])
+      keys <- args[where_the_keys_at]
+      make_batch_call <- function() {
+        if (i > run_length) return(list("new_call" = done))
+        for (j in where_the_keys_at) {
+          second_arg[[2]] <- args[[j]]
+          second_arg[[3]][[2]] <- i
+          second_arg[[3]][[3]] <- min(i + size - 1, run_length)
+          args[[j]] <- second_arg
+        }
+        i <<- i + size
+        list(
+          "new_call" = args,
+          "keys" = keys,
+          "num_batches" = ceiling(run_length / size)
+        )
+      }
+      function(ncores) {
+        lapply(1:ncores, function(core_idx) {
+          make_batch_call()
+        })
+      }
+    }
 
     loop <- function(next_batch) {
       if (is.null(next_batch)) return(NULL)
@@ -152,54 +280,6 @@ batch <- function(
     }
 
 
-    decide_strategy <- function(splitting_strategy) {
-      if (is.null(splitting_strategy)) { default_strategy }
-      else { splitting_strategy }
-    }
-
-
-    default_strategy <- function(...) {
-      args <- match.call(call = substitute(batch_fn(...)), definition = batch_fn)
-      keys <- clean_keys(args, keys)
-      if (length(keys) == 0) stop("Bad keys - no batched key matches keys passed.")
-      args <- cache_functions(args, keys)
-      where_the_inputs_at <- find_inputs(args, keys)
-      if (length(where_the_inputs_at) == 0) return(NULL)
-      what_to_eval <- args[[where_the_inputs_at[[1]]]]
-      if (is.null(what_to_eval)) return(NULL)
-      run_length <- calculate_run_length(what_to_eval)
-      print_batching_message(run_length, size)
-      generate_batch_maker(run_length, where_the_inputs_at, args, size)
-    }
-
-
-    clean_keys <- function(args, keys) {
-      if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
-      keys
-    }
-
-
-    cache_functions <- function(args, keys) {
-      for (key in keys) {
-        if (is.call(args[[key]]))
-          args[[key]] <- eval(args[[key]], envir = parent.frame(find_in_stack(key)+1))
-      }
-      args
-    }
-
-
-    find_inputs <- function(args, keys) {
-      if(identical(keys, "...")) seq(2, length(args))
-      else grep(paste0(keys, collapse="|"), names(args))
-    }
-
-
-    calculate_run_length <- function(what_to_eval) {
-      eval(
-        bquote(NROW(.(what_to_eval))),
-        envir = parent.frame(find_in_stack(what_to_eval))
-      )
-    }
 
 
     print_batching_message <- function(run_length, size) {
@@ -209,48 +289,7 @@ batch <- function(
     }
 
 
-    generate_batch_maker <- function(run_length, where_the_inputs_at, args, size) {
-      i <- 1
-      second_arg <- quote(x[seq(y, z)])
-      keys <- args[where_the_inputs_at]
-      make_batch_call <- function() {
-        if (i > run_length) return(list("new_call" = done))
-        for (j in where_the_inputs_at) {
-          second_arg[[2]] <- args[[j]]
-          second_arg[[3]][[2]] <- i
-          second_arg[[3]][[3]] <- min(i + size - 1, run_length)
-          args[[j]] <- second_arg
-        }
-        i <<- i + size
-        list(
-          "new_call" = args,
-          "keys" = keys,
-          "num_batches" = ceiling(run_length / size)
-        )
-      }
-      function(ncores) {
-        lapply(1:ncores, function(core_idx) {
-          make_batch_call()
-        })
-      }
-    }
 
 
-    if (is.batched_fn(batch_fn)) return(batch_fn)
-    if (missing(keys)) stop("Keys must be defined.")
-    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
-    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
-      stop("Retry must be an positive integer.")
-    }
-
-    if (isTRUE(trycatch)) partial_progress$clear()
-
-    batched_fn <- function(...) {
-      body_fn <- make_body_fn(decide_strategy(splitting_strategy))
-      body_fn(...)
-    }
-
-    attr(batched_fn, "batched") <- TRUE
-    class(batched_fn) <- c("batched_function", "function")
     batched_fn
 }
