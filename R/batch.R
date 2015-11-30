@@ -130,6 +130,8 @@ batch <- function(
       batch_calls(run_length, where_the_keys_at, args, size)
     }
 
+    ## Find the keys within the args and error if no keys are found.
+    ## keys are the arguments we are batching over.
     match_keys_with_args <- function(args, keys) {
       if (!identical(keys, "...")) keys <- keys[keys %in% names(args)]
       if (length(keys) == 0) stop("Bad keys - no batched key matches keys passed.")
@@ -137,42 +139,96 @@ batch <- function(
     }
 
     cache_args_that_are_functions <- function(args, keys) {
+      ## If any key is a call (a function), call it once now ahead of time, so
+      ## that it is not evaluated in every batch.
       for (key in keys) {
         if (is.call(args[[key]]))
-          args[[key]] <- eval(args[[key]], envir = parent.frame(find_in_stack(key)+1))
+          args[[key]] <- eval(args[[key]], envir = parent.frame(environment_that_contains_the_key(key)+1))
       }
       args
     }
 
+    ## Return the index positions of the keys within the arguments.
     find_keys_within_args <- function(args, keys) {
+      ## If we are batching a splat, that means we want to batch by every argument, so
+      ## we return every valid position.
       if(identical(keys, "...")) seq(2, length(args))
+      ## Otherwise, we use a grep to find the keys within the args.
       else grep(paste0(keys, collapse="|"), names(args))
     }
 
+    ## To calculate the length of the run, we find the length of the key,
+    ## but we have to be careful to evaluate the NROW within the environment
+    ## that the key will be in.
     calculate_run_length <- function(key_to_eval) {
       eval(bquote(NROW(.(key_to_eval))),
-        envir = parent.frame(find_in_stack(key_to_eval)))
+        envir = parent.frame(environment_that_contains_the_key(key_to_eval)))
     }
 
-    batch_calls <- function(run_length, where_the_keys_at, args, size) {
-      i <- 1
-      second_arg <- quote(x[seq(y, z)])
-      keys <- args[where_the_keys_at]
+    ## Finding the environment that contains the tree is tricky, because we have to
+    ## traverse environments through the parent frames outside of the batchman call and
+    ## into the containing environment where `batch` was originally called from.
+    ##
+    ## We can use `parent.frame(n)` to search `n` frames up. We know that batchman occupies
+    ## two frames, so that means that the key will be in either the third or the fourth
+    ## frame from our current position, depending on whether there is an intervening
+    ## package call in the frame or not.
+    environment_that_contains_the_key <- function(key_to_eval) {
+      ## If the key is not a variable, we don't actually need to search a particular frame.
+      if (!is(key_to_eval, "name")) return(3)
+      frames_to_search = c(3, 4)
+      for (frame in frames_to_search) {
+        ## Use `exists` to see if the variable exists within that frame.
+        ## If we find it, return that frame.
+        if(exists(as.character(key_to_eval),
+          ## Actually search one more frame up, because we're in a for loop, and that's
+          ## another frame.
+          envir = parent.frame(frame + 1),
+          inherits = FALSE
+        )) { return(frame) }
+      }
+    }
 
+    ## This function will return the next batch each time it is called.
+    batch_calls <- function(run_length, where_the_keys_at, args, size) {
+      keys <- args[where_the_keys_at]
+      ## `i` keeps track of where in the batch we are.
+      i <- 1
+      ## We want to subset the entire set of possible args, from positions y to z,
+      ## where y is our current position in the batch and z is the current position
+      ## plus the size of the batch (going from the start to the end of the batch).
+      ##
+      ## `all_args`, `start`, and `finish` will be dynamically rewritten to be the
+      ## correct values through the magic of R.
+      selected_args <- quote(all_args[seq(start, finish)])
+
+      ## Okay, this is the actual function that returns the next batch each time it is called.
       make_batch_call <- function() {
-        if (i > run_length) return(list("new_call" = done))
+        ## If we have exceeded our run length, we are done, so we return a special
+        ## done indicator that can be detected by batchman later to signal the end.
+        if (i > run_length) return(done)
+        ## If we're not done, we rewrite selected_args to have the correct values.
         for (j in where_the_keys_at) {
-          second_arg[[2]] <- args[[j]]
-          second_arg[[3]][[2]] <- i
-          second_arg[[3]][[3]] <- min(i + size - 1, run_length)
-          args[[j]] <- second_arg
+          ## Substtitue to the actual args for `all_args`.
+          selected_args[[2]] <- args[[j]]
+          ## Substitute our current position for `start`.
+          selected_args[[3]][[2]] <- i
+          ## Substitute the end index of this batch for `finish`
+          ending_index <- min(i + size - 1, run_length)
+          selected_args[[3]][[3]] <- ending_index
+          ## Write the subset back onto the arg list.
+          args[[j]] <- selected_args
         }
+        ## Increment our position to the start of the next batch.
         i <<- i + size
+        ## Return the metadata for batchman to look at, with the args, keys, and
+        ## number of batches.
         list("new_call" = args,
           "keys" = keys,
           "num_batches" = ceiling(run_length / size))
       }
 
+      ## Parallelize the batching across all the cores.
       function(ncores) {
         lapply(1:ncores, function(core_idx) {
           make_batch_call()
@@ -186,7 +242,7 @@ batch <- function(
       batch_info <- next_batch(ncores)
       new_call <- lapply(batch_info, `[[`, 'new_call')
       run_env <- list2env(list(batch_fn = batch_fn))
-      parent.env(run_env) <- parent.frame(find_in_stack(batch_info[[1]]$keys[[1]]))
+      parent.env(run_env) <- parent.frame(environment_that_contains_the_key(batch_info[[1]]$keys[[1]]))
       p <- if (`verbose_set?`()) progress_bar(ceiling(batch_info[[1]]$num_batches/ncores))
       apply_method <- if (isTRUE(parallel)) { parallel::mclapply } else { lapply }
 
@@ -227,19 +283,6 @@ batch <- function(
       if (!is.no_batches(batches)) batches
     }
 
-
-    find_in_stack <- function(key_to_eval) {
-      if (!is(key_to_eval, "name")) return(3)
-      stacks_to_search = c(3, 4)
-      for (stack in stacks_to_search) {
-        `exists?` <- exists(
-          as.character(key_to_eval),
-          envir = parent.frame(stack + 1),
-          inherits = FALSE
-        )
-        if (`exists?`) return(stack)
-      }
-    }
 
 
     `verbose_set?` <- function() {
