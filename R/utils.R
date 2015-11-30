@@ -28,10 +28,12 @@ get_before_fn <- function(fn) environment(fn)$batch_fn
 unbatched <- get_before_fn
 
 #' Print batched functions as they once were.
-#' @param fn function. The function to print.
+#' @param x function. The function to print.
+#' @param ... Additional arguments to pass to print.
 #' @export
-print.batched_function <- function(fn) print(list(before_fn = get_before_fn(fn), after_fn = body(fn)))
-
+print.batched_function <- function(x, ...) {
+  print(list(before_fn = get_before_fn(x), after_fn = body(x)), ...)
+}
 
 #' Converts a number to an ordinal (e.g., first, second, etc.)
 #' @param num numeric. The number to convert to ordinal.

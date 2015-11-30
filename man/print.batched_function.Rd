@@ -4,10 +4,12 @@
 \alias{print.batched_function}
 \title{Print batched functions as they once were.}
 \usage{
-\method{print}{batched_function}(fn)
+\method{print}{batched_function}(x, ...)
 }
 \arguments{
-\item{fn}{function. The function to print.}
+\item{x}{function. The function to print.}
+
+\item{...}{Additional arguments to pass to print.}
 }
 \description{
 Print batched functions as they once were.
