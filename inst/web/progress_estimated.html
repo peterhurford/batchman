@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>progress_estimated. batchman 1.3.0.9002</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="
+Hadley Wickham. &lt;https://github.com/hadley/dplyr/blob/master/R/progress.R&gt;
+">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">batchman 1.3.0.9002</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Progress bar with estimated time.</h1>
+
+<div class="row">
+  <div class="span8">
+    <h2>Usage</h2>
+    <pre><div>progress_estimated(n, min_time&nbsp;=&nbsp;0)</div></pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>n</dt>
+      <dd>Total number of</dd>
+      <dt>min_time</dt>
+      <dd>Progress bar will wait until at least <code>min_time</code>
+seconds have elapsed before displaying any results.</dd>
+    </dl>
+    
+    <div class="Value">
+      <h2>Value</h2>
+
+      <p><dl>
+A ref class with methods <code>tick()</code>, <code>print()</code>,
+  <code>pause()</code>, and <code>stop()</code>.
+</dl></p>
+  
+    </div>
+
+    <div class="Description">
+      <h2>Description</h2>
+
+      <p>This reference class represents a text progress bar displayed estimated
+time remaining. When finished, it displays the total duration.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre class="examples"><div class='input'>p &lt;- progress_estimated(3)
+p$tick()
+p$tick()
+p$tick()
+
+p &lt;- progress_estimated(3)
+for (i in 1:3) p$pause(0.1)$tick()$print()
+
+p &lt;- progress_estimated(3)
+p$tick()$print()$
+ pause(1)$stop()
+
+# If min_time is set, progress bar not shown until that many
+# seconds have elapsed
+p &lt;- progress_estimated(3, min_time = 3)
+for (i in 1:3) p$pause(0.1)$tick()$print()
+
+## Not run: 
+# p &lt;- progress_estimated(10, min_time = 3)
+# for (i in 1:10) p$pause(0.5)$tick()$print()
+# ## End(Not run)
+</div></pre>
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>progress_estimated</li>
+    </ul>
+    <ul>
+      <li>internal</li>
+    </ul> -->
+      
+    
+    <h2>Author</h2>
+    
+Hadley Wickham. <https://github.com/hadley/dplyr/blob/master/R/progress.R>
+
+    
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>
