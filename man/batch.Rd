@@ -39,7 +39,15 @@ work on windows.}
 
 \item{parallel}{logical. Use parallel::mclapply to execute your batches. Incompatible with retry.}
 }
+\value{
+a batched version of the passed function.
+}
 \description{
 batch maps a function to a batched version of that function.
+}
+\examples{
+batched_identity <- batch(identity, "x", combination_strategy = c, size = 10)
+  batched_identity(seq(100))
+  # Does identity, but in batches of 10.
 }
 

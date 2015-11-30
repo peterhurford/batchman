@@ -1,3 +1,8 @@
+## v1.3.0.9003
+
+* Add rocco docs and staticdocs.
+* Cleaned up variable names and function orders to make things more clear.
+
 ## v1.3.0.9002
 
 * Removes the batbelt dependency.

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>Index. batchman 1.3.0.9002</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">batchman 1.3.0.9002</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <div class="row">
+  <div class="span8">
+    <p><img src="http://i.imgur.com/63jNVwY.png" alt="Batchman"/></p>
+
+<h2>Batchman <a href="https://travis-ci.org/peterhurford/batchman?branch=master"><img src="https://travis-ci.org/peterhurford/batchman.svg?branch=master" alt="Build Status"/></a> <a href="https://coveralls.io/r/peterhurford/batchman"><img src="https://img.shields.io/coveralls/peterhurford/batchman.svg" alt="Coverage Status"/></a> <img src="https://img.shields.io/github/tag/peterhurford/batchman.svg" alt="Release Tag"/></h2>
+
+<p><strong>Batchman</strong> is a wrapper for R methods to run them in arbitrary batches.</p>
+
+<p>Some methods crash when running on large inputs.  Batchman helps prevent those crashes, and helps increase speed where batching is useful.</p>
+
+<p>If you find that running <code>computationally_intensive_method(dataframe_with_lots_of_rows)</code> is having trouble, you could instead run the method via Batchman, which will split up the inputs into smaller components, run them in individual batches, and then merge all those batches together.</p>
+
+<p>To run batchman, you specify the function you want to batch, the key or keys that you want to batch by (or &ldquo;&hellip;&rdquo; if batching a splat function), a combination strategy for how to combine batches (e.g., <code>c</code> or <code>rbind</code>), and a batch size.</p>
+
+<p>For example, to run <code>computationally_intensive_method</code> in batches of 50&hellip;</p>
+
+<pre><code class="R">batched_method &lt;- batch(computationally_intensive_method, keys = &#39;df&#39;, combination_strategy = rbind, size = 50)
+batched_method(dataframe_with_lots_of_rows)
+</code></pre>
+
+<h2>Installation</h2>
+
+<p>This package is not yet available from CRAN. To install the latest development builds directly from GitHub, run this instead:</p>
+
+<pre><code class="R">if (!require(&#39;devtools&#39;)) install.packages(&#39;devtools&#39;)
+devtools::install_github(&#39;peterhurford&#39;, &#39;batchman&#39;)
+</code></pre>
+
+<h2>Using Batchman</h2>
+
+<h4>Using Batchman with Error-Prone Sources</h4>
+
+<p>Sometimes you might be batching functions that can be error-prone, like an API call.  When initializing the batching via the <code>batch</code> function, choose to pass <code>trycatch = TRUE</code> to <code>batch</code> to run Batchman in a <code>tryCatch</code> block.  If this is done, batchman will stop upon an error, but store all the progress so far, which you can retrieve with <code>batchman::progress()</code>.</p>
+
+<p>You can pass both <code>trycatch = TRUE</code> and <code>stop = FALSE</code> to <code>batch</code>, and Batchman will keep going even when encountering an error.  Blocks that result in an error will be converted to <code>NA</code>.</p>
+
+<p>Lastly, rather than having to constantly re-run and paste together the batch function when it errors, you can use the <code>retry</code> argument, which will retry each batch that errors until either the error goes away or it has been retried <code>retry</code> times.</p>
+
+<h4>Using Batchman to Parallelize Your Work</h4>
+
+<p>If you set <code>parallel = TRUE</code> batchman will use <code>parallel::mclapply</code> to run the
+batches. This can greatly speed up applications that have a fixed time penalty,
+like network API calls. Beware that you cannot use <code>parallel</code> and <code>trycatch</code>
+together due to <del>the laziness of developers</del> complex mechanics of parallel
+code execution in R.</p>
+
+<h4>Using Batchman with Big Data</h4>
+
+<p>Batchman could be a useful tool for handling big data in R.  Since batchman allows for a custom <code>combination_strategy</code>, you could do something other than combining the items in R memory (which may not be possible with the size of your data).  For example, you might make a method like:</p>
+
+<pre><code class="R">big_data_combine &lt;- function(first_batch, second_batch) {
+  store_in_database(second_batch)  
+}
+</code></pre>
+
+<p>Which will work to store each batch generated (except the first, which you&#39;d have to make an exception for).</p>
+
+<p>You then can call batchman using <code>big_data_combine</code> as the <code>combination_strategy</code>.</p>
+
+<h2>Combine Batches</h2>
+
+<p>If you have objects you want to combine, but don&#39;t know their class, you can combine them together with <code>combine</code> (as long as all items are the same class).  This allows for class-agnostic recombination, which is useful for batching, and is the default combination method for Batchman.</p>
+
+<pre><code class="R">&gt; combine(1, 2, 3, 4)
+[1] 1 2 3 4
+
+&gt; combine(&#39;hello&#39;, &#39;world&#39;)
+[1] &quot;helloworld&quot;
+
+&gt; combine(c(1,2,3), c(4,5,6))
+[1] 1 2 3 4 5 6
+
+&gt; combine(list(&#39;first&#39; = &#39;a&#39;), list(&#39;second&#39; = &#39;b&#39;, &#39;third&#39; = &#39;c&#39;))
+$first
+[1] &quot;a&quot;
+
+$second
+[1] &quot;b&quot;
+
+$third
+[1] &quot;c&quot;
+
+&gt; combine(data.frame(x = 1:3, y = c(&#39;a&#39;,&#39;b&#39;,&#39;c&#39;)), data.frame(x = 11:13, y = c(&#39;x&#39;,&#39;y&#39;,&#39;z&#39;)))
+   x y
+   1  1 a
+   2  2 b
+   3  3 c
+   4 11 x
+   5 12 y
+   6 13 z
+
+&gt; combine(matrix(1:6, nrow = 2, ncol = 3), matrix(11:16, nrow = 2, ncol = 3))
+Still not good with matricies. Coming soon.
+</code></pre>
+
+<p>Bonus: If you have a list of things to combine, you can call <code>combine_by_list(list)</code> to combine them directly.</p>
+
+<h2>Other Features</h2>
+
+<ul>
+<li><p>You can now set <code>options(&#39;batchman.verbose&#39; = FALSE)</code> to turn off batchman&#39;s print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set <code>bachman.verbose = FALSE</code> is annoying.</p></li>
+<li><p>The same is true with using <code>options(&#39;batchman.verbose&#39; = TRUE)</code> to turn on batchman&#39;s printed messages dynamically.</p></li>
+</ul>
+
+
+    <h2>Help topics</h2>
+
+    <h3></h3>
+    
+    
+    <ul class="index">
+        
+      <li>
+        <code><a href="as.ordinal.html">as.ordinal</a></code><br />Converts a number to an ordinal (e.g., first, second, etc.)</li>
+            
+      <li>
+        <code><a href="batch.html">batch</a></code><br />batch maps a function to a batched version of that function.</li>
+            
+      <li>
+        <code><a href="batchman.html">batchman</a></code>(batchman-package)<br />batchman.</li>
+            
+      <li>
+        <code><a href="combine.html">combine</a></code>(combine_by_list)<br />Combine multiple objects into one object, regardless of class.</li>
+            
+      <li>
+        <code><a href="get_before_fn.html">get_before_fn</a></code>(unbatched)<br />A helper method to get the pre-batched function of a batched function.</li>
+            
+      <li>
+        <code><a href="is.batched_fn.html">is.batched_fn</a></code><br />A helper method to determine if a function is already batched.</li>
+            
+      <li>
+        <code><a href="is.done.html">is.done</a></code><br />A helper method to determine if batchman is done batching.</li>
+            
+      <li>
+        <code><a href="is.emptyrun.html">is.emptyrun</a></code><br />A helper method to determine if an empty batch was scheduled to run.</li>
+            
+      <li>
+        <code><a href="is.no_batches.html">is.no_batches</a></code><br />A helper method to determine if batches doesn't contain batches.</li>
+            
+      <li>
+        <code><a href="print.batched_function.html">print.batched_function</a></code><br />Print batched functions as they once were.</li>
+            
+      <li>
+        <code><a href="progress.html">progress</a></code><br />Stores partial progress.</li>
+    
+    </ul>
+  </div>
+  
+  <div class="span3 offset1">
+        
+    <h2>Dependencies</h2>
+    <ul>
+      
+      
+      <li><strong>Suggests</strong>: R6, parallel, testthat, testthatsomemore, knitr, microbenchmark</li>
+      
+    </ul>
+    <h2>Authors</h2>
+    <ul>
+      <li><a href="mailto:peter.hurford@avantcredit.com">Peter Hurford</a> [aut, cre]</li>
+    </ul>
+
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>
