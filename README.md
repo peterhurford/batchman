@@ -1,4 +1,4 @@
-![Batchman](http://i.imgur.com/63jNVwY.png)
+![Batchman](http://i.imgur.com/63jNVwY.png) ([documentation]([![Documentation](https://img.shields.io/badge/rocco--docs-%E2%9C%93-blue.svg)](http://peterhurford.github.io/batchman/)))
 
 ## Batchman
 **Batchman** is a wrapper for R methods to run them in arbitrary batches.
