@@ -16,5 +16,5 @@ Suggests:
     knitr,
     microbenchmark,
     rocco
-License: MIT <http://opensource.org/licenses/MIT>
+License: MIT + file LICENSE
 LazyData: true
