@@ -98,6 +98,7 @@ batch <- function(
       else { splitting_strategy }
     }
 
+
     default_strategy <- function(...) {
       ## We use `match.call` to extract all the arguments that are being passed to
       ## the function we want to batch.
@@ -112,12 +113,21 @@ batch <- function(
       args <- cache_args_that_are_functions(args, keys)
       ## We now want to know the positions of the keys within the list of args.
       where_the_keys_at <- find_keys_within_args(args, keys)
+      ## If there aren't any keys, return NULL
       if (length(where_the_keys_at) == 0) return(NULL)
-      what_to_eval <- args[[where_the_keys_at[[1]]]]
-      if (is.null(what_to_eval)) return(NULL)
-      run_length <- calculate_run_length(what_to_eval)
-      print_batching_message(run_length, size)
-      generate_batch_maker(run_length, where_the_keys_at, args, size)
+      ## Use the indicies to find the first key to evaluate
+      key_to_eval <- args[[where_the_keys_at[[1]]]]
+      ## If the key is NULL, return NULL
+      if (is.null(key_to_eval)) return(NULL)
+
+      run_length <- calculate_run_length(key_to_eval)
+      if (run_length > size && `verbose_set?`()) {
+        cat("More than", size, "inputs detected.  Batching...\n")
+      }
+
+      ## Each call of the batch_calls function will return the next batch until
+      ## there are no batches left.
+      batch_calls(run_length, where_the_keys_at, args, size)
     }
 
     match_keys_with_args <- function(args, keys) {
@@ -139,17 +149,16 @@ batch <- function(
       else grep(paste0(keys, collapse="|"), names(args))
     }
 
-    calculate_run_length <- function(what_to_eval) {
-      eval(
-        bquote(NROW(.(what_to_eval))),
-        envir = parent.frame(find_in_stack(what_to_eval))
-      )
+    calculate_run_length <- function(key_to_eval) {
+      eval(bquote(NROW(.(key_to_eval))),
+        envir = parent.frame(find_in_stack(key_to_eval)))
     }
 
-    generate_batch_maker <- function(run_length, where_the_keys_at, args, size) {
+    batch_calls <- function(run_length, where_the_keys_at, args, size) {
       i <- 1
       second_arg <- quote(x[seq(y, z)])
       keys <- args[where_the_keys_at]
+
       make_batch_call <- function() {
         if (i > run_length) return(list("new_call" = done))
         for (j in where_the_keys_at) {
@@ -159,12 +168,11 @@ batch <- function(
           args[[j]] <- second_arg
         }
         i <<- i + size
-        list(
-          "new_call" = args,
+        list("new_call" = args,
           "keys" = keys,
-          "num_batches" = ceiling(run_length / size)
-        )
+          "num_batches" = ceiling(run_length / size))
       }
+
       function(ncores) {
         lapply(1:ncores, function(core_idx) {
           make_batch_call()
@@ -220,12 +228,12 @@ batch <- function(
     }
 
 
-    find_in_stack <- function(what_to_eval) {
-      if (!is(what_to_eval, "name")) return(3)
+    find_in_stack <- function(key_to_eval) {
+      if (!is(key_to_eval, "name")) return(3)
       stacks_to_search = c(3, 4)
       for (stack in stacks_to_search) {
         `exists?` <- exists(
-          as.character(what_to_eval),
+          as.character(key_to_eval),
           envir = parent.frame(stack + 1),
           inherits = FALSE
         )
@@ -278,18 +286,6 @@ batch <- function(
         warning("Some of the data failed to process because: ", e$message)
       }
     }
-
-
-
-
-    print_batching_message <- function(run_length, size) {
-      if (run_length > size && `verbose_set?`()) {
-        cat("More than", size, "inputs detected.  Batching...\n")
-      }
-    }
-
-
-
 
     batched_fn
 }
