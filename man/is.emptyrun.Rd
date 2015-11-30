@@ -4,7 +4,7 @@
 \alias{is.emptyrun}
 \title{A helper method to determine if an empty batch was scheduled to run.}
 \usage{
-is.emptyrun(x)
+is.emptyrun(batches)
 }
 \arguments{
 \item{batches}{The object to see if it contains batches.}
