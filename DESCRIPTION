@@ -13,6 +13,7 @@ Suggests:
     testthat,
     testthatsomemore,
     knitr,
-    microbenchmark
+    microbenchmark,
+    rocco
 License: MIT <http://opensource.org/licenses/MIT>
 LazyData: true
