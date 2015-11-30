@@ -9,6 +9,7 @@ Depends:
     R (>= 3.0.1)
 Suggests:
     R6,
+    plyr,
     parallel,
     testthat,
     testthatsomemore,
