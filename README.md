@@ -1,6 +1,6 @@
 ![Batchman](http://i.imgur.com/63jNVwY.png)
 
-## Batchman [![Build Status](https://travis-ci.org/peterhurford/batchman.svg?branch=master)](https://travis-ci.org/peterhurford/batchman?branch=master) [![Coverage Status](https://img.shields.io/coveralls/peterhurford/batchman.svg)](https://coveralls.io/r/peterhurford/batchman) ![Release Tag](https://img.shields.io/github/tag/peterhurford/batchman.svg)
+## Batchman [![Build Status](https://travis-ci.org/peterhurford/batchman.svg?branch=master)](https://travis-ci.org/peterhurford/batchman?branch=master) [![Coverage Status](https://img.shields.io/coveralls/peterhurford/batchman.svg)](https://coveralls.io/r/peterhurford/batchman) ![Release Tag](https://img.shields.io/github/tag/peterhurford/batchman.svg) [![Documentation](https://img.shields.io/badge/rocco--docs-%E2%9C%93-blue.svg)](http://peterhurford.github.io/batchman/)
 
 **Batchman** is a wrapper for R methods to run them in arbitrary batches.
 
