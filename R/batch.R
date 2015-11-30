@@ -314,21 +314,19 @@ batch <- function(
       )
     }
 
-
     iterated_try_catch <- function(expr, new_call, run_env, current_try) {
-      tryCatch(
-        eval(new_call, envir = run_env),
+      tryCatch(eval(new_call, envir = run_env),
         error = function(e) {
+          ## Warn or error as the user requests.
           raise_error_or_warning(e, current_try)
+          ## Keep retrying until either we succeed or run out of retries.
           if (current_try > 0) {
             if (isTRUE(verbose_set())) {
-              cat(
-                "Retrying for the",
+              cat("Retrying for the",
                 as.ordinal(retry - current_try + 1),
-                "time.",
-                "\n"
-              )
+                "time.\n")
             }
+            ## Recursively retry
             iterated_try_catch(expr, new_call, run_env, current_try - 1)
           }
           else { NULL }
@@ -336,19 +334,23 @@ batch <- function(
       )
     }
 
-
     raise_error_or_warning <- function(e, retry) {
       if (isTRUE(stop) && retry == 0) {
         if (verbose_set()) cat("\nERROR... HALTING.\n")
+        ## We can stop and give the user the partial progress.
         if(exists("batches") && verbose_set()) {
           cat("Partial progress saved to batchman::progress()\n")
         }
         stop(e$message)
       } else {
+        ## The bad keys error is one we must stop on, regardless of what the user would like
+        ## because it doesn't work otherwise.  So we detect that and stop if needed.
+        ## Otherwise, we merely warn, abandon that batch, and go to the next one.
         if (grepl("Bad keys - no batched key", e$message)) stop(e$message)
         warning("Some of the data failed to process because: ", e$message)
       }
     }
 
+    ## We made it! Return the `batched_fn`, ready to process in batch!
     batched_fn
 }
