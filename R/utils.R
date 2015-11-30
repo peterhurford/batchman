@@ -35,6 +35,8 @@ print.batched_function <- function(x, ...) {
   print(list(before_fn = get_before_fn(x), after_fn = body(x)), ...)
 }
 
+`%||%` <- function(x, y) if (is.null(x)) y else x
+
 #' Converts a number to an ordinal (e.g., first, second, etc.)
 #' @param num numeric. The number to convert to ordinal.
 #' @export
