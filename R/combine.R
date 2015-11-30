@@ -6,8 +6,9 @@ combine <- function(...) {
   combine_by_list(list(...))
 }
 
-#' @inheritParams combine
-#' @rdname combine
+#' Combine multiple objects into one object, regardless of class.
+#' @param combination_list list. A list of batches to combine.
+#' @return an object of the same class as original, but now including batch.
 #' @export
 combine_by_list <- function(combination_list) {
   if (!is(combination_list, "list")) {

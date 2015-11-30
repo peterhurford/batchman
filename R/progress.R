@@ -4,7 +4,7 @@
 #' that batch.  Batchman allows partial progress to be stored and retrieved.
 #'
 #' @export
-progress <- function() batchman:::partial_progress$get()
+progress <- function() partial_progress$get()
 
 partial_progress <- local({
   .cache <- list()

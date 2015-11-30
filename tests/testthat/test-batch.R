@@ -286,7 +286,7 @@ test_that("With retry = 1, it can batch an R Bomb without erroring.", {
 })
 
 test_that("retrying works with two keys", {
-  batchman:::partial_progress$clear()
+  partial_progress$clear()
   rbomb$reset()
   double_fn_caller <- function(x, y) { x[[1]](); y[[1]](); }
   batch_fn <- batch(
@@ -306,7 +306,7 @@ test_that("retrying works with two keys", {
 })
 
 test_that("retry works with a splat", {
-  batchman:::partial_progress$clear()
+  partial_progress$clear()
   rbomb$reset()
   splat_caller <- function(...) {
     lapply(list(...), function(l) do.call(l[[1]], list()))

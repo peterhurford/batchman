@@ -147,7 +147,7 @@ show_time <- function(x) {
 now <- function() proc.time()[[3]]
 
 progress_bar <- function(num_batches) {
-  if (suppressMessages(require(R6))) {
+  if (suppressMessages(requireNamespace("R6"))) {
     progress_estimated(num_batches, min_time = 3)
   }
 }

@@ -1,3 +1,8 @@
+## v1.3.0.9004
+
+* Enable R CMD CHECK on Travis.
+* Pass R CMD CHECK.
+
 ## v1.3.0.9003
 
 * Add rocco docs and staticdocs.

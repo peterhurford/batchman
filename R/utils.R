@@ -7,7 +7,7 @@ is.no_batches <- function(batches) is(batches, "no_batches")
 
 #' A helper method to determine if an empty batch was scheduled to run.
 #' @param batches The object to see if it contains batches.
-is.emptyrun <- function(x) identical(x, structure(NULL, emptyrun = TRUE))
+is.emptyrun <- function(batches) identical(batches, structure(NULL, emptyrun = TRUE))
 
 #' A helper method to determine if batchman is done batching.
 #' @param call The batchman call object.
@@ -28,10 +28,14 @@ get_before_fn <- function(fn) environment(fn)$batch_fn
 unbatched <- get_before_fn
 
 #' Print batched functions as they once were.
-#' @param fn function. The function to print.
+#' @param x function. The function to print.
+#' @param ... Additional arguments to pass to print.
 #' @export
-print.batched_function <- function(fn) print(list(before_fn = get_before_fn(fn), after_fn = body(fn)))
+print.batched_function <- function(x, ...) {
+  print(list(before_fn = get_before_fn(x), after_fn = body(x)), ...)
+}
 
+`%||%` <- function(x, y) if (is.null(x)) y else x
 
 #' Converts a number to an ordinal (e.g., first, second, etc.)
 #' @param num numeric. The number to convert to ordinal.
