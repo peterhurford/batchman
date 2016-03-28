@@ -15,7 +15,8 @@ Suggests:
     parallel,
     testthat,
     knitr,
-    microbenchmark
+    microbenchmark,
+    progress
 Remotes:
     robertzk/rocco,
     gaborcsardi/progress

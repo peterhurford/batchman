@@ -1,6 +1,3 @@
-batches <- structure(list(), class = "no_batches")
-done <- list("new_call" = structure(list(), class = "batchman.is.done"))
-
 #' A helper method to determine if batches doesn't contain batches.
 #' @param batches The object to see if it contains batches.
 is.no_batches <- function(batches) is(batches, "no_batches")
@@ -32,7 +29,7 @@ unbatched <- get_before_fn
 #' @param ... Additional arguments to pass to print.
 #' @export
 print.batched_function <- function(x, ...) {
-  print(list(before_fn = get_before_fn(x), after_fn = body(x)), ...)
+  print(list(before_fn = batchman::get_before_fn(x), after_fn = body(x)), ...)
 }
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
