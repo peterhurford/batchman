@@ -18,10 +18,12 @@ Suggests:
     testthat,
     knitr,
     microbenchmark,
-    progress
+    progress,
+    checkr
 Remotes:
     robertzk/rocco,
-    gaborcsardi/progress
+    gaborcsardi/progress,
+    peterhurford/checkr
 License: MIT + file LICENSE
 LazyData: true
 RoxygenNote: 5.0.1.9000

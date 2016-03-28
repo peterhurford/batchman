@@ -1,7 +1,7 @@
 context("combine")
 
 test_that("it errors if input is not a list", {
-  expect_error(combine_by_list(1, 2, 3))
+  expect_error(combine_by_list(1, 2, 3), "Input must be a list.")
 })
 
 test_that("it combines characters via paste0", {

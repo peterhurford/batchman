@@ -38,20 +38,20 @@ batches <- structure(list(), class = "no_batches")
 #'   batched_identity(seq(100))
 #'   # Does identity, but in batches of 10.
 #' @export
-batch <- function(
-    batch_fn,
-    keys,
-    splitting_strategy = NULL,
-    combination_strategy = batchman::combine,
-    size = 50,
-    trycatch = FALSE,
-    batchman.verbose = isTRUE(interactive()),
-    stop = FALSE,
-    retry = 0,
-    sleep = 0,
-    ncores = parallel::detectCores(),
-    parallel = FALSE
-) {
+batch <- checkr::ensure(
+  pre = list(batch_fn %is% "function",
+    keys %is% atomic || keys %is% list,
+    combination_strategy %is% "function",
+    size %is% numeric, size > 0, length(size) == 1, size %% 1 == 0,
+    trycatch %is% logical,
+    batchman.verbose %is% logical,
+    stop %is% logical,
+    retry %is% numeric, retry > 0, retry %% 1 == 0),
+  function(batch_fn, keys, splitting_strategy = NULL,
+    combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
+    batchman.verbose = isTRUE(interactive()), stop = FALSE,
+    retry = 0, sleep = 0, ncores = parallel::detectCores(),
+    parallel = FALSE) {
     ## Parallellized code will behave oddly if some of the code stops for an
     ## error, so it's best not to do it.
     if (isTRUE(parallel) && isTRUE(trycatch)) {
@@ -60,9 +60,6 @@ batch <- function(
     if (batchman:::is.batched_fn(batch_fn)) return(batch_fn)
     if (missing(keys)) stop("Keys must be defined.")
     if (isTRUE(stop) || retry > 0) trycatch <- TRUE
-    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
-      stop("Retry must be an positive integer.")
-    }
     ## Batchman can store partial progress on runs if it stops unexpectedly.
     ## We should clear it on another run where partial progress is desired.
     if (isTRUE(trycatch)) batchman:::partial_progress$clear()

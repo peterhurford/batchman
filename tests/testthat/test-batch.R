@@ -27,12 +27,6 @@ test_that("it errors if keys is not passed", {
   expect_error(batch(identity), "Keys must be defined.")
 })
 
-test_that("it errors if retry is not a positive integer", {
-  expect_error(batch(identity, "x", retry = "pizza", trycatch = FALSE))
-  expect_error(batch(identity, "x", retry = 0.2, trycatch = FALSE))
-  expect_error(batch(identity, "x", retry = -1, trycatch = FALSE))
-})
-
 test_that("if stop is TRUE, tryCatch is overwritten to be TRUE", {
   batch_fn <- batch(identity, "x", stop = TRUE, trycatch = FALSE)
   expect_true(environment(batch_fn)$trycatch)
@@ -44,7 +38,7 @@ test_that("if retry > 0, tryCatch is overwritten to be TRUE", {
 })
 
 test_that("if parallel and tryCatch are both set, an error will occur", {
-  expect_error(batch(identity, "x", parallel = TRUE, tryCatch = TRUE), "choose speed or robustness")
+  expect_error(batch(identity, "x", parallel = TRUE, trycatch = TRUE), "choose speed or robustness")
 })
 
 for (i in seq(5)) {
@@ -241,14 +235,12 @@ test_that("it must be more efficient to batch than to execute an O(x^2) function
 
 test_that("For expensive functions it's faster to paralellize though", {
   # Simulate an constantly slow function
-  skip_on_travis()
   sleep_square <- function(input) { Sys.sleep(1); input * 2 }
   batched_sleep_square_p <- batch(sleep_square, "input",
     combination_strategy = c, size = 5, batchman.verbose = FALSE, parallel = TRUE)
   batched_sleep_square_l <- batch(sleep_square, "input",
     combination_strategy = c, size = 5, batchman.verbose = FALSE, parallel = FALSE)
-  require(microbenchmark)
-  speeds <- summary(microbenchmark(times = 1,
+  speeds <- summary(microbenchmark::microbenchmark(times = 1,
     batched_sleep_square_l(seq(20)),
     batched_sleep_square_p(seq(20))
   ))
@@ -329,6 +321,15 @@ test_that("It returns nothing when something always errors, despite retrying.", 
 test_that("It will error if it reaches max retries and stop is TRUE.", {
   fn2 <- batch(error_fn, "x", batchman.verbose = FALSE, stop = TRUE, retry = 1,
     combination_strategy = c)
+  expect_error(fn2(seq(200)))
+})
+
+test_that("error handling works in parallel", {
+  fn2 <- batch(error_fn, "x", batchman.verbose = FALSE, retry = 1,
+    combination_strategy = c, parallel = TRUE)
+  expect_equal(fn2(seq(200)), rep(NULL, 4))
+  fn2 <- batch(error_fn, "x", batchman.verbose = FALSE, stop = TRUE, retry = 1,
+    combination_strategy = c, parallel = TRUE)
   expect_error(fn2(seq(200)))
 })
 
