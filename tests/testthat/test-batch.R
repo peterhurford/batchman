@@ -43,6 +43,10 @@ test_that("if retry > 0, tryCatch is overwritten to be TRUE", {
   expect_true(environment(batch_fn)$trycatch)
 })
 
+test_that("if parallel and tryCatch are both set, an error will occur", {
+  expect_error(batch(identity, "x", parallel = TRUE, tryCatch = TRUE), "choose speed or robustness")
+})
+
 for (i in seq(5)) {
   test_that(paste("it sends things in batches of size", i), {
     check_for_batch_length_of(i)
@@ -280,10 +284,8 @@ test_that("it does not overwrite verbose", {
 test_that("With retry = 1, it can batch an R Bomb without erroring.", {
   b_fn <- get_expect_error_fn(retry = 1, parallel = FALSE)
   rbomb$reset()
-  expect_equal(
-    b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
-    c(1, 1, 1, 1, 1)
-  )
+  expect_equal(b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
+    c(1, 1, 1, 1, 1))
 })
 
 test_that("retrying works with two keys", {
@@ -294,15 +296,10 @@ test_that("retrying works with two keys", {
     double_fn_caller,
     c("x", "y"),
     combination_strategy = function(x, y) unlist(c(x, y)),
-    size = 1,
-    retry = 1,
-    batchman.verbose = FALSE,
-    parallel = FALSE
-  )
-  o <- batch_fn(
-    c(fn1, rbomb$detonate, fn1),
-    c(fn1, fn1, rbomb$detonate)
-  )
+    size = 1, retry = 1,
+    batchman.verbose = FALSE, parallel = FALSE)
+  o <- batch_fn(c(fn1, rbomb$detonate, fn1),
+    c(fn1, fn1, rbomb$detonate))
   expect_equal(o, c(1, 1, 1))
 })
 
@@ -312,15 +309,9 @@ test_that("retry works with a splat", {
   splat_caller <- function(...) {
     lapply(list(...), function(l) do.call(l[[1]], list()))
   }
-  batch_fn <- batch(
-    splat_caller,
-    "...",
+  batch_fn <- batch(splat_caller, "...",
     combination_strategy = c,
-    size = 1,
-    batchman.verbose = FALSE,
-    retry = 1,
-    parallel = FALSE
-  )
+    size = 1, batchman.verbose = FALSE, retry = 1, parallel = FALSE)
   o <- batch_fn(
     list(fn1),
     list(fn1),
@@ -348,11 +339,9 @@ test_that("Retrying one level deep doesn't work when the error is two levels dee
   expect_equal(
     b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
     c(1, 1, 1, 1, NULL)
-  )
-})
+  ) })
 
-lapply(
-  list(list("one", 1), list("two", 2), list("three", 3), list("four", 4)),
+lapply(list(list("one", 1), list("two", 2), list("three", 3), list("four", 4)),
   function(num) {
     test_that(paste("It can retry", num[[1]], "levels deep"), {
       b_fn <- get_expect_error_fn(retry = num[[2]], parallel = FALSE)
@@ -361,42 +350,22 @@ lapply(
       expect_equal(
         b_fn(c(fn1, fn1, fn1, fn1, rbomb$detonate)),
         c(1, 1, 1, 1, 1)
-      )
-    })
-  }
-)
+      ) }) })
 
 test_that("batch man sleeps when given sleep argument", {
     env <- list2env(list(called = FALSE))
     with_mock(`Sys.sleep` = function(...) { env$called <- TRUE }, {
-        batch_fn <- batch(
-          identity,
-          "x",
-          combination_strategy = c,
-          size = 1,
-          batchman.verbose = FALSE,
-          sleep = 30
-        )
+        batch_fn <- batch(identity, "x", combination_strategy = c,
+          size = 1, batchman.verbose = FALSE, sleep = 30)
         batch_fn(c(1))
         expect_true(env$called)
-      }
-    )
-  }
-)
+      }) })
 
 test_that("batch man does not call sleep when sleep argument is not given", {
     env <- list2env(list(called = FALSE))
     with_mock(`Sys.sleep` = function(...) { env$called <- TRUE }, {
-        batch_fn <- batch(
-          identity,
-          "x",
-          combination_strategy = c,
-          size = 1,
-          batchman.verbose = FALSE
-        )
+        batch_fn <- batch(identity, "x", combination_strategy = c,
+          size = 1, batchman.verbose = FALSE)
         batch_fn(c(1))
         expect_false(env$called)
-      }
-    )
-  }
-)
+      }) })
