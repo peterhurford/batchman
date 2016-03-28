@@ -14,7 +14,6 @@ Suggests:
     plyr,
     parallel,
     testthat,
-    testthatsomemore,
     knitr,
     microbenchmark
 Remotes:
