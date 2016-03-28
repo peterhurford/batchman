@@ -14,6 +14,7 @@ env:
   - global:
     - WARNINGS_ARE_ERRORS=1
     - _R_CHECK_FORCE_SUGGESTS_=0
+    - LINTR_COMMENT_BOT=false
     - R_LIBS_USER=~/.R/library
 cache:
   directories:
