@@ -17,7 +17,7 @@ Suggests:
     knitr,
     microbenchmark
 Remotes:
-    robertzk/rocco
+    robertzk/rocco,
     gaborcsardi/progress
 License: MIT + file LICENSE
 LazyData: true
