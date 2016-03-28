@@ -18,6 +18,7 @@ Suggests:
     microbenchmark
 Remotes:
     robertzk/rocco
+    gaborcsardi/progress
 License: MIT + file LICENSE
 LazyData: true
 RoxygenNote: 5.0.1.9000

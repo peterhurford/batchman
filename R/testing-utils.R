@@ -38,7 +38,7 @@ get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0, parall
   batch(
     fncaller,
     "list_fn",
-    combination_strategy = function(x,y) unlist(c(x,y)),
+    combination_strategy = function(x, y) unlist(c(x, y)),
     size = 1,
     batchman.verbose = FALSE,
     trycatch = trycatch,
@@ -48,4 +48,4 @@ get_expect_error_fn <- function(trycatch = TRUE, stop = FALSE, retry = 0, parall
   )
 }
 
-error_fn <- function(x) { stop('ERROR') }
+error_fn <- function(x) { stop("ERROR") }
