@@ -1,5 +1,4 @@
 batches <- structure(list(), class = "no_batches")
-done <- list("new_call" = structure(list(), class = "batchman.is.done"))
 
 ## `batch` is where all the action happens.  `batch` is a functional -- it takes a function as
 ## an argument (among many other arguments) and returns a function.  The returned function is
@@ -210,6 +209,7 @@ batch <- function(
       ## correct values through the magic of R.
 
       ## Okay, this is the actual function that returns the next batch each time it is called.
+      done <- list("new_call" = structure(list(), class = "batchman.is.done"))
       make_batch_call <- function() {
         selected_args <- quote(all_args[seq(start, finish)])
         ## If we have exceeded our run length, we are done, so we return a special
@@ -289,7 +289,7 @@ batch <- function(
         ## If the user has enabled it, we sleep here.
         if (sleep > 0) { Sys.sleep(sleep) }
         ## Parallel execution requires some special error handling.
-        errors <- vapply(temp_batches, function(x) is(x, "try-error"), logical(1))
+        errors <- vapply(temp_batches, function(x) methods::is(x, "try-error"), logical(1))
         if (any(errors)) {
           ## If a batch has failed, we warn or stop, as the user requested.
           if (isTRUE(stop)) {
@@ -299,7 +299,8 @@ batch <- function(
             temp_batches[errors] <- list(NULL)
           }
         }
-        temp_batches  <- temp_batches[vapply(temp_batches, Negate(batchman:::is.emptyrun), logical(1))]
+        temp_batches  <- temp_batches[vapply(temp_batches,
+          Negate(batchman:::is.emptyrun), logical(1))]
         ## We then use the combination_strategy to combine all the batches.
         current_batch <- Reduce(combination_strategy, temp_batches)
         ## We initialize batches to be a "no batches" (empty) indicator so that we can

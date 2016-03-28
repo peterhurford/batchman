@@ -9,6 +9,8 @@ Description: Batchman is a wrapper for R methods to run them in arbitary
     prevent those crashes, and helps increase speed where batching is useful.
 Depends:
     R (>= 3.0.1)
+Imports:
+    methods
 Suggests:
     R6,
     plyr,
