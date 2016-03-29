@@ -362,4 +362,4 @@ batch <- checkr::ensure(
 
     ## We made it! Return the `batched_fn`, ready to process in batch!
     batched_fn
-}
+  })
