@@ -36,6 +36,7 @@ print.batched_function <- function(x, ...) {
 
 #' Converts a number to an ordinal (e.g., first, second, etc.)
 #' @param num numeric. The number to convert to ordinal.
+#' @import checkr
 #' @export
 as.ordinal <- checkr::ensure(
   pre = list(num %is% numeric, num > 0, num %% 1 == 0),

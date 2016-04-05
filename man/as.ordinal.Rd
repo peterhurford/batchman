@@ -4,7 +4,7 @@
 \alias{as.ordinal}
 \title{Converts a number to an ordinal (e.g., first, second, etc.)}
 \usage{
-as.ordinal(...)
+as.ordinal(num)
 }
 \arguments{
 \item{num}{numeric. The number to convert to ordinal.}
