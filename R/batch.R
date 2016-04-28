@@ -62,11 +62,10 @@ batch <- checkr::ensure(
       stop("Please choose speed or robustness. (parallel or retry. cannot have both)")
     }
     if (batchman:::is.batched_fn(batch_fn)) return(batch_fn)
-    if (missing(keys)) stop("Keys must be defined.")
-    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
+    if (isTRUE(stop) || retry > 0) { trycatch <- TRUE }
     ## Batchman can store partial progress on runs if it stops unexpectedly.
     ## We should clear it on another run where partial progress is desired.
-    if (isTRUE(trycatch)) batchman:::partial_progress$clear()
+    if (isTRUE(trycatch)) { batchman:::partial_progress$clear() }
 
     ## The goal is to swap the function with a batched version of itself.
     batched_fn <- function(...) {
