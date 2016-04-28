@@ -10,7 +10,8 @@ Description: Batchman is a wrapper for R methods to run them in arbitary
 Depends:
     R (>= 3.0.1)
 Imports:
-    methods
+    methods,
+    checkr
 Suggests:
     R6,
     plyr,
@@ -19,7 +20,6 @@ Suggests:
     knitr,
     microbenchmark,
     progress,
-    checkr
 Remotes:
     robertzk/rocco,
     gaborcsardi/progress,
