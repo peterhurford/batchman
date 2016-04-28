@@ -23,10 +23,6 @@ check_for_batch_length_of <- function(len) {
   testthat::expect_equal(len, batch_length)
 }
 
-test_that("it errors if keys is not passed", {
-  expect_error(batch(identity), "Keys must be defined.")
-})
-
 test_that("if stop is TRUE, tryCatch is overwritten to be TRUE", {
   batch_fn <- batch(identity, "x", stop = TRUE, trycatch = FALSE)
   expect_true(environment(batch_fn)$trycatch)
