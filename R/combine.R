@@ -8,11 +8,12 @@ combine <- function(...) {
 
 #' Combine multiple objects into one object, regardless of class.
 #' @param combination_list list. A list of batches to combine.
+#' @param ... list. Any number of additional arguments, which are ignored.
 #' @return an object of the same class as original, but now including batch.
 #' @export
-combine_by_list <- function(combination_list) {
-  if (!is(combination_list, "list")) {
-    stop("Input must be a list. Call combine() instead.")
+combine_by_list <- function(combination_list, ...) {
+  if (!is(combination_list, "list") || length(list(...)) > 0) {
+    stop("Input must be a single list. Call combine() instead.")
   }
   if (length(combination_list) == 1) return(combination_list[[1]])
 
