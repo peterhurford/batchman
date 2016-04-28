@@ -1,3 +1,5 @@
+batches <- structure(list(), class = "no_batches")
+
 ## `batch` is where all the action happens.  `batch` is a functional -- it takes a function as
 ## an argument (among many other arguments) and returns a function.  The returned function is
 ## a modified version of the original function that will process inputs in batch.
@@ -36,33 +38,34 @@
 #'   batched_identity(seq(100))
 #'   # Does identity, but in batches of 10.
 #' @export
-batch <- function(
-    batch_fn,
-    keys,
-    splitting_strategy = NULL,
-    combination_strategy = batchman::combine,
-    size = 50,
-    trycatch = FALSE,
-    batchman.verbose = isTRUE(interactive()),
-    stop = FALSE,
-    retry = 0,
-    sleep = 0,
-    ncores = parallel::detectCores(),
-    parallel = FALSE
-) {
-    ## Parallellized code will behave oddly if some of the code stops for an error, so it's best not to do it.
-    if(isTRUE(parallel) && isTRUE(trycatch)) {
-      stop('Please choose speed or robustness. (parallel or retry. cannot have both)')
+batch <- checkr::ensure(
+  pre = list(batch_fn %is% "function",
+    keys %is% atomic || keys %is% list,
+    splitting_strategy %is% "function" || splitting_strategy %is% NULL,
+    combination_strategy %is% "function",
+    size %is% numeric, size > 0, length(size) == 1, size %% 1 == 0,
+    trycatch %is% logical,
+    batchman.verbose %is% logical,
+    stop %is% logical,
+    retry %is% numeric, retry >= 0, retry %% 1 == 0,
+    sleep %is% numeric, sleep >= 0, sleep %% 1 == 0,
+    ncores %is% numeric, ncores > 0, ncores %% 1 == 0,
+    parallel %is% logical),
+  function(batch_fn, keys, splitting_strategy = NULL,
+    combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
+    batchman.verbose = isTRUE(interactive()), stop = FALSE,
+    retry = 0, sleep = 0, ncores = parallel::detectCores(),
+    parallel = FALSE) {
+    ## Parallellized code will behave oddly if some of the code stops for an
+    ## error, so it's best not to do it.
+    if (isTRUE(parallel) && isTRUE(trycatch)) {
+      stop("Please choose speed or robustness. (parallel or retry. cannot have both)")
     }
-    if (is.batched_fn(batch_fn)) return(batch_fn)
-    if (missing(keys)) stop("Keys must be defined.")
-    if (isTRUE(stop) || retry > 0) trycatch <- TRUE
-    if (!is.numeric(retry) || retry %% 1 != 0 || retry < 0) {
-      stop("Retry must be an positive integer.")
-    }
+    if (batchman:::is.batched_fn(batch_fn)) return(batch_fn)
+    if (isTRUE(stop) || retry > 0) { trycatch <- TRUE }
     ## Batchman can store partial progress on runs if it stops unexpectedly.
     ## We should clear it on another run where partial progress is desired.
-    if (isTRUE(trycatch)) partial_progress$clear()
+    if (isTRUE(trycatch)) { batchman:::partial_progress$clear() }
 
     ## The goal is to swap the function with a batched version of itself.
     batched_fn <- function(...) {
@@ -141,8 +144,10 @@ batch <- function(
       ## If any key is a call (a function), call it once now ahead of time, so
       ## that it is not evaluated in every batch.
       for (key in keys) {
-        if (is.call(args[[key]]))
-          args[[key]] <- eval(args[[key]], envir = parent.frame(environment_that_contains_the_key(key)+1))
+        if (is.call(args[[key]])) {
+          args[[key]] <- eval(args[[key]],
+            envir = parent.frame(environment_that_contains_the_key(key) + 1))
+        }
       }
       args
     }
@@ -151,9 +156,12 @@ batch <- function(
     find_keys_within_args <- function(args, keys) {
       ## If we are batching a splat, that means we want to batch by every argument, so
       ## we return every valid position.
-      if(identical(keys, "...")) seq(2, length(args))
-      ## Otherwise, we use a grep to find the keys within the args.
-      else grep(paste0(keys, collapse="|"), names(args))
+      if (identical(keys, "...")) {
+        seq(2, length(args))
+      } else {
+        ## Otherwise, we use a grep to find the keys within the args.
+        grep(paste0(keys, collapse = "|"), names(args))
+      }
     }
 
     ## To calculate the length of the run, we find the length of the key,
@@ -174,12 +182,12 @@ batch <- function(
     ## package call in the frame or not.
     environment_that_contains_the_key <- function(key_to_eval) {
       ## If the key is not a variable, we don't actually need to search a particular frame.
-      if (!is(key_to_eval, "name")) return(3)
-      frames_to_search = c(3, 4)
+      if (!methods::is(key_to_eval, "name")) return(3)
+      frames_to_search <- c(3, 4)
       for (frame in frames_to_search) {
         ## Use `exists` to see if the variable exists within that frame.
         ## If we find it, return that frame.
-        if(exists(as.character(key_to_eval),
+        if (exists(as.character(key_to_eval),
           ## Actually search one more frame up, because we're in a for loop, and that's
           ## another frame.
           envir = parent.frame(frame + 1),
@@ -199,10 +207,11 @@ batch <- function(
       ##
       ## `all_args`, `start`, and `finish` will be dynamically rewritten to be the
       ## correct values through the magic of R.
-      selected_args <- quote(all_args[seq(start, finish)])
 
       ## Okay, this is the actual function that returns the next batch each time it is called.
+      done <- list("new_call" = structure(list(), class = "batchman.is.done"))
       make_batch_call <- function() {
+        selected_args <- quote(all_args[seq(start, finish)])
         ## If we have exceeded our run length, we are done, so we return a special
         ## done indicator that can be detected by batchman later to signal the end.
         if (i > run_length) return(done)
@@ -246,7 +255,7 @@ batch <- function(
       ## number of batches) for the batches.
       batch_info <- next_batch(ncores)
       ## Get the args for each batch.
-      new_call <- lapply(batch_info, `[[`, 'new_call')
+      new_call <- lapply(batch_info, `[[`, "new_call")
       ## The `run_env` is an environment that contains the original function we want to
       ## batch.
       run_env <- list2env(list(batch_fn = batch_fn))
@@ -255,15 +264,17 @@ batch <- function(
       parent.env(run_env) <- parent.frame(environment_that_contains_the_key(
         batch_info[[1]]$keys[[1]]))
       ## Batchman can track progress with a fancy progress bar.
-      p <- if (verbose_set()) progress_bar(ceiling(batch_info[[1]]$num_batches/ncores))
+      p <- if (verbose_set()) {
+        progress::progress_bar$new(ceiling(batch_info[[1]]$num_batches / ncores))
+      }
       ## Either `lapply` or `mclapply` depending on whether we are parallel.
       apply_method <- if (isTRUE(parallel)) { parallel::mclapply } else { lapply }
 
       ## As long as we don't encounter an end-of-batch done indicator, we will keep looping
       ## through the batches and process them.
-      while(!is.done(new_call[[1]])) {
+      while (!batchman:::is.done(new_call[[1]])) {
         temp_batches <- apply_method(new_call, function(newcall, ...) {
-          if (is.done(newcall)) return(structure(NULL, emptyrun = TRUE))
+          if (batchman:::is.done(newcall)) return(structure(NULL, emptyrun = TRUE))
           ## If trycatch is enabled, we will attempt to retry multiple times.
           if (isTRUE(trycatch) && !isTRUE(parallel)) {
             iterated_try_catch(eval(newcall, envir = run_env),
@@ -273,36 +284,37 @@ batch <- function(
             eval(newcall, envir = run_env)
           }
         }, mc.cores = ncores, mc.allow.recursive = FALSE, mc.preschedule = TRUE)
-        if (verbose_set()) { update_progress_bar(p) }
+        if (verbose_set()) { p$tick() }
         ## We might want to sleep between batches (for example, to not overload an API).
         ## If the user has enabled it, we sleep here.
         if (sleep > 0) { Sys.sleep(sleep) }
         ## Parallel execution requires some special error handling.
-        errors <- vapply(temp_batches, function(x) is(x, 'try-error'), logical(1))
+        errors <- vapply(temp_batches, function(x) methods::is(x, "try-error"), logical(1))
         if (any(errors)) {
           ## If a batch has failed, we warn or stop, as the user requested.
           if (isTRUE(stop)) {
-            stop(attr(temp_batches[errors][[1]], 'condition'))
+            stop(attr(temp_batches[errors][[1]], "condition"))
           } else {
-            warning(as.character(attr(temp_batches[errors][[1]], 'condition')))
+            warning(as.character(attr(temp_batches[errors][[1]], "condition")))
             temp_batches[errors] <- list(NULL)
           }
         }
-        temp_batches  <- temp_batches[vapply(temp_batches, Negate(is.emptyrun), logical(1))]
+        temp_batches  <- temp_batches[vapply(temp_batches,
+          Negate(batchman:::is.emptyrun), logical(1))]
         ## We then use the combination_strategy to combine all the batches.
         current_batch <- Reduce(combination_strategy, temp_batches)
         ## We initialize batches to be a "no batches" (empty) indicator so that we can
         ## combine the first element correctly.
-        batches <- if (is.no_batches(batches)) current_batch
+        batches <- if (batchman:::is.no_batches(batches)) current_batch
           else combination_strategy(batches, current_batch)
 
         ## We set the partial progress if the user has requested it.
-        if (isTRUE(trycatch)) partial_progress$set(batches)
+        if (isTRUE(trycatch)) batchman:::partial_progress$set(batches)
         ## And we move onto the next batch.
-        new_call <- lapply(next_batch(ncores), `[[`, 'new_call')
+        new_call <- lapply(next_batch(ncores), `[[`, "new_call")
       }
       ## Return the batches if there are any.
-      if (!is.no_batches(batches)) batches
+      if (!batchman:::is.no_batches(batches)) batches
     }
 
     ## Verbose is true if it is enabled by the option OR
@@ -338,7 +350,7 @@ batch <- function(
       if (isTRUE(stop) && retry == 0) {
         if (verbose_set()) cat("\nERROR... HALTING.\n")
         ## We can stop and give the user the partial progress.
-        if(exists("batches") && verbose_set()) {
+        if (exists("batches") && verbose_set()) {
           cat("Partial progress saved to batchman::progress()\n")
         }
         stop(e$message)
@@ -353,4 +365,4 @@ batch <- function(
 
     ## We made it! Return the `batched_fn`, ready to process in batch!
     batched_fn
-}
+  })

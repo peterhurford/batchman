@@ -1,3 +1,9 @@
+## v1.3.0.9005
+
+* Swapped out the progress bar for another R package.
+* Re-pass R CMD CHECK.
+* Pass lintr.
+
 ## v1.3.0.9004
 
 * Enable R CMD CHECK on Travis.

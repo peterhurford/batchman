@@ -14,4 +14,3 @@ partial_progress <- local({
     set = function(value) .cache <<- value
   ))
 })
-
