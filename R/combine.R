@@ -3,7 +3,7 @@
 #' @return an object of the same class as original, but now including batch.
 #' @export
 combine <- checkr::ensure(function(...) {
-  batchman::combine_by_list(list(...))
+  batchman::combine_by_list(unname(list(...)))
 })
 
 #' Combine multiple objects into one object, regardless of class.
