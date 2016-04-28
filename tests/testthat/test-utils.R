@@ -9,7 +9,7 @@ describe("printing calculates preconditions, postconditions, and the before_fn",
   called_body <- FALSE
   with_mock(
     `batchman::get_before_fn` = function(...) { called_before <<- TRUE },
-    `body` = function(...) { called_body <<- TRUE },
+    `body` = function(...) { called_body <<- TRUE }, {
       expect_false(called_before)
       expect_false(called_body)
       print(batchman::batch(identity, "x"))
