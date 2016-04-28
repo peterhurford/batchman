@@ -13,12 +13,15 @@ is.done <- function(call) methods::is(call, "batchman.is.done")
 #' A helper method to determine if a function is already batched.
 #' @param fn function. The function to test.
 #' @export
-is.batched_fn <- function(fn) isTRUE(attr(fn, "batched"))
+is.batched_fn <- checkr::ensure(pre = fn %is% "function", post = result %is% logical,
+  function(fn) isTRUE(attr(fn, "batched")))
 
 #' A helper method to get the pre-batched function of a batched function.
 #' @param fn function. The batched function to look for.
 #' @export
-get_before_fn <- function(fn) environment(fn)$batch_fn
+get_before_fn <- checkr::ensure(pre = is.batched_fn(fn),
+  post = list(result %is% "function", !is.batched_fn(result)
+  function(fn) environment(fn)$batch_fn)
 
 #' @rdname get_before_fn
 #' @export
