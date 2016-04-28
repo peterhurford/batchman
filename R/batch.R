@@ -49,7 +49,7 @@ batch <- checkr::ensure(
     stop %is% logical,
     retry %is% numeric, retry > 0, retry %% 1 == 0,
     sleep %is% numeric, sleep > 0, sleep %% 1 == 0,
-    ncores %is% numeric, ncores > 0, ncores %%1 == 0,
+    ncores %is% numeric, ncores > 0, ncores %% 1 == 0,
     parallel %is% logical),
   function(batch_fn, keys, splitting_strategy = NULL,
     combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
