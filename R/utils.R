@@ -20,7 +20,7 @@ is.batched_fn <- checkr::ensure(pre = fn %is% "function", post = result %is% log
 #' @param fn function. The batched function to look for.
 #' @export
 get_before_fn <- checkr::ensure(pre = is.batched_fn(fn),
-  post = list(result %is% "function", !is.batched_fn(result)
+  post = list(result %is% "function", !is.batched_fn(result)),
   function(fn) environment(fn)$batch_fn)
 
 #' @rdname get_before_fn
