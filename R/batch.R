@@ -32,6 +32,7 @@ batches <- structure(list(), class = "no_batches")
 #' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry.
 #' @param ncores integer. Number of cores to use if parallel is set to true. Notice that it doesn't
 #'   work on windows.
+#' @param key vector. Same as /code{keys}.
 #' @return a batched version of the passed function.
 #' @examples
 #'   batched_identity <- batch(identity, "x", combination_strategy = c, size = 10)

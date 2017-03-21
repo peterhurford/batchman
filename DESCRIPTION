@@ -20,10 +20,9 @@ Suggests:
     knitr,
     microbenchmark,
     progress,
-Remotes:
-    robertzk/rocco,
+Remotes: robertzk/rocco,
     gaborcsardi/progress,
     peterhurford/checkr
 License: MIT + file LICENSE
 LazyData: true
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 5.0.1
