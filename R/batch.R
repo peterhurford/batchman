@@ -56,7 +56,7 @@ batch <- checkr::ensure(
     batchman.verbose = isTRUE(interactive()), stop = FALSE,
     retry = 0, sleep = 0, ncores = parallel::detectCores(),
     parallel = FALSE, key) {
-    ## newer versions of R no longer fuzzy matches arguments
+    ## newer versions of R don't fuzzy match arguments the same way
     if (missing(keys)) { keys <- key }
     ## Parallellized code will behave oddly if some of the code stops for an
     ## error, so it's best not to do it.

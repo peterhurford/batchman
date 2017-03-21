@@ -1,6 +1,6 @@
 Package: batchman
 Title: A wrapper for R methods to run them in arbitrary batches
-Version: 1.3.0.9005
+Version: 1.3.0.9006
 Author: Peter Hurford <peter@peterhurford.com>
 Maintainer: Peter Hurford <peter@peterhurford.com>
 Authors@R: person("Peter", "Hurford", email = "peter@peterhurford.com", role = c("aut", "cre"))

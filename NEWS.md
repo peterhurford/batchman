@@ -1,3 +1,7 @@
+## v1.3.0.9006
+
+* Add a `key` argument to `batch`, since fuzzy matching works differently in later R versions.
+
 ## v1.3.0.9005
 
 * Swapped out the progress bar for another R package.
