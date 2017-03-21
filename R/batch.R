@@ -55,7 +55,9 @@ batch <- checkr::ensure(
     combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
     batchman.verbose = isTRUE(interactive()), stop = FALSE,
     retry = 0, sleep = 0, ncores = parallel::detectCores(),
-    parallel = FALSE) {
+    parallel = FALSE, key) {
+    ## newer versions of R no longer fuzzy matches arguments
+    if (missing(keys)) { keys <- key }
     ## Parallellized code will behave oddly if some of the code stops for an
     ## error, so it's best not to do it.
     if (isTRUE(parallel) && isTRUE(trycatch)) {
