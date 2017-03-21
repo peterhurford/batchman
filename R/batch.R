@@ -57,7 +57,7 @@ batch <- checkr::ensure(
     retry = 0, sleep = 0, ncores = parallel::detectCores(),
     parallel = FALSE, key) {
     ## newer versions of R don't fuzzy match arguments the same way
-    if (missing(keys)) { keys <- key }
+    if (missing(keys) && !missing(key)) { keys <- key }
     ## Parallellized code will behave oddly if some of the code stops for an
     ## error, so it's best not to do it.
     if (isTRUE(parallel) && isTRUE(trycatch)) {
