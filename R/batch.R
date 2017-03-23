@@ -32,6 +32,7 @@ batches <- structure(list(), class = "no_batches")
 #' @param parallel logical. Use parallel::mclapply to execute your batches. Incompatible with retry.
 #' @param ncores integer. Number of cores to use if parallel is set to true. Notice that it doesn't
 #'   work on windows.
+#' @param key vector. Same as /code{keys}.
 #' @return a batched version of the passed function.
 #' @examples
 #'   batched_identity <- batch(identity, "x", combination_strategy = c, size = 10)
@@ -55,7 +56,9 @@ batch <- checkr::ensure(
     combination_strategy = batchman::combine, size = 50, trycatch = FALSE,
     batchman.verbose = isTRUE(interactive()), stop = FALSE,
     retry = 0, sleep = 0, ncores = parallel::detectCores(),
-    parallel = FALSE) {
+    parallel = FALSE, key) {
+    ## newer versions of R don't fuzzy match arguments the same way
+    if (missing(keys) && !missing(key)) { keys <- key }
     ## Parallellized code will behave oddly if some of the code stops for an
     ## error, so it's best not to do it.
     if (isTRUE(parallel) && isTRUE(trycatch)) {
