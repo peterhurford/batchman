@@ -112,3 +112,5 @@ Bonus: If you have a list of things to combine, you can call `combine_by_list(li
 * You can now set `options('batchman.verbose' = FALSE)` to turn off batchman's print messages dynamically, even for functions that have already been generated.  This is potentially useful for tests where digging into batchman to set `bachman.verbose = FALSE` is annoying.
 
 * The same is true with using `options('batchman.verbose' = TRUE)` to turn on batchman's printed messages dynamically.
+
+![](https://pbs.twimg.com/media/Eu5WAyKVgAAPsq2.jpg)
